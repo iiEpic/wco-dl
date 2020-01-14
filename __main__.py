@@ -1,4 +1,5 @@
 import requests
+import urllib3
 import base64
 import re
 import os
@@ -6,6 +7,8 @@ from cfscrape import create_scraper
 from bs4 import BeautifulSoup
 from requests import session
 from tqdm import tqdm
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 url = input('Input the URL: ')
 user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36' \
