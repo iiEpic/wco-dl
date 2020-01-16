@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+__author__ = "_iEpic"
+__email__ = "iepicunknown@gmail.com"
+"""
+
+# TODO: Add functionality of Anime-dl (Arguments, resolutions(480 or 720))
+# TODO: Add different files/folders for different classes
+# TODO: Make shit look prettier
+# TODO: *** download_shows function ***
+
 import requests
 import urllib3
 import base64
@@ -18,6 +31,33 @@ header = {
 }
 base_url = "https://wcostream.com"
 path = os.path.dirname(os.path.realpath(__file__))
+
+
+def info_extractor(link_url):
+    try:
+        episode_no = re.search('episode-[0-9]+', link_url).group(0).replace('episode-', '')
+    except:
+        episode_no = '0'
+
+    if 'season' in link_url:
+        show_name = re.search('.com(.*)season', link_url).group(0).replace('.com/', '').replace('-season', '').replace(
+            '-', ' ').title()
+        season_no = re.search('season-[0-9]+', link_url).group(0).replace('season-', '')
+    elif 'special' in link_url:
+        show_name = re.search('.com(.*)special', link_url).group(0).replace('.com/', '').replace('-', ' ').title()
+        season_no = '0'
+    elif 'ova' in link_url:
+        show_name = re.search('.com(.*)ova', link_url).group(0).replace('.com/', '').replace('-ova', '').replace(
+            '-', ' ').title()
+        episode_no = 0
+        season_no = 0
+        return "{0} OVA".format(show_name)
+    else:
+        show_name = re.search('.com(.*)episode', link_url).group(0).replace('.com/', '').replace(
+            '-episode', '').replace('-', ' ').title()
+        season_no = '1'
+    return "{0} S{1}E{2}".format(show_name, season_no, episode_no)
+
 
 def request_c(url, extraHeaders=None):
     myheaders = {
@@ -48,66 +88,83 @@ def _decode(array, ending):
     return base_url + html.find("iframe")['src']
 
 
+def download_shows(playlist_url):
+    # TODO: Begin this section!
+    # TODO: Scrub the link to ensure its /anime/(Name of Anime) so it has multiple shows
+    # This will currently get all show file names
+    page = requests.get(playlist_url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    episode_list = soup.findAll('div', {'id': 'catlist-listview'})[0]
+
+    episode_links = episode_list.findAll('a')
+
+    for link in episode_links:
+        file_name = info_extractor(link['href'])
+        print(file_name)
+    pass
+
+
 def get_download_url(embed_url):
-    r2 = request_c(embed_url)
-    html = r2.text
+    page = request_c(embed_url)
+    html = page.text
 
     # Find the stream URLs.
     if 'getvid?evid' in html:
         # Query-style stream getting.
-        sourceURL = re.search('get\("(.*?)"', html, re.DOTALL).group(1)
+        source_url = re.search('get\("(.*?)"', html, re.DOTALL).group(1)
 
-        # Inline code similar to 'requestHelper()'.
-        # The User-Agent for this next request is somehow encoded into the media tokens, so we make sure to use
-        # the EXACT SAME value later, when playing the media, or else we get a HTTP 404 / 500 error.
-        r3 = request_c(
-            base_url + sourceURL,
+        page2 = request_c(
+            base_url + source_url,
             extraHeaders={
                 'User-Agent': user_agent, 'Accept': '*/*', 'Referer': embed_url,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         )
-        if not r3.ok:
+        if not page2.ok:
             raise Exception('Sources XMLHttpRequest request failed')
-        jsonData = r3.json()
+        json_data = page2.json()
 
         # Only two qualities are ever available: 480p ("SD") and 720p ("HD").
-        sourceURLs = []
-        sdToken = jsonData.get('enc', '')
-        hdToken = jsonData.get('hd', '')
-        sourceBaseURL = jsonData.get('server', '') + '/getvid?evid='
-        if sdToken:
-            sourceURLs.append(('480 (SD)', sourceBaseURL + sdToken))  # Order the items as (LABEL, URL).
-        if hdToken:
-            sourceURLs.append(('720 (HD)', sourceBaseURL + hdToken))
+        source_urls = []
+        sd_token = json_data.get('enc', '')
+        hd_token = json_data.get('hd', '')
+        source_base_url = json_data.get('server', '') + '/getvid?evid='
+        if sd_token:
+            source_urls.append(('480 (SD)', source_base_url + sd_token))  # Order the items as (LABEL, URL).
+        if hd_token:
+            source_urls.append(('720 (HD)', source_base_url + hd_token))
         # Use the same backup stream method as the source: cdn domain + SD stream.
-        backupURL = jsonData.get('cdn', '') + '/getvid?evid=' + (sdToken or hdToken)
+        backup_url = json_data.get('cdn', '') + '/getvid?evid=' + (sd_token or hd_token)
     else:
         # Alternative video player page, with plain stream links in the JWPlayer javascript.
-        sourcesBlock = re.search('sources:\s*?\[(.*?)\]', html, re.DOTALL).group(1)
-        streamPattern = re.compile('\{\s*?file:\s*?"(.*?)"(?:,\s*?label:\s*?"(.*?)")?')
-        sourceURLs = [
+        sources_block = re.search('sources:\s*?\[(.*?)\]', html, re.DOTALL).group(1)
+        stream_pattern = re.compile('\{\s*?file:\s*?"(.*?)"(?:,\s*?label:\s*?"(.*?)")?')
+        source_urls = [
             # Order the items as (LABEL (or empty string), URL).
             (sourceMatch.group(2), sourceMatch.group(1))
-            for sourceMatch in streamPattern.finditer(sourcesBlock)
+            for sourceMatch in stream_pattern.finditer(sources_block)
         ]
         # Use the backup link in the 'onError' handler of the 'jw' player.
-        backupMatch = streamPattern.search(html[html.find(b'jw.onError'):])
-        backupURL = backupMatch.group(1) if backupMatch else ''
-    #print("debug:", backupURL)
-    #print("debug:", sourceURLs)
+        backup_match = stream_pattern.search(html[html.find(b'jw.onError'):])
+        backup_url = backup_match.group(1) if backup_match else ''
+    # print("debug:", backupURL)
+    # print("debug:", sourceURLs)
 
-    return sourceURLs[0][1]
+    return source_urls[0][1], backup_url
 
 
-def download(url):
+def download(download_url, page_url):
     sess = session()
     sess = create_scraper(sess)
-    dlr = sess.get(url, stream=True, headers=header)  # Downloading the content using python.
-    with open(path + "\\temp.mp4", "wb") as handle:
+
+    file_name = info_extractor(page_url)
+    print('[wco-dl] - Downloading {0}'.format(file_name))
+    dlr = sess.get(download_url, stream=True, headers=header)  # Downloading the content using python.
+    with open(path + "\\{0}.mp4".format(file_name), "wb") as handle:
         for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
             handle.write(data)
-    print("Download has been completed.")  # Viola
+    print("[wco-dl] Download for {0} completed.".format(file_name))
 
 
 page = requests.get(url)
@@ -116,11 +173,10 @@ soup = BeautifulSoup(page.text, 'html.parser')
 embedURL = soup.find("meta", {"itemprop": "embedURL"})
 scriptURL = embedURL.next_element.next_element.text
 letters = scriptURL[scriptURL.find("[")+1:scriptURL.find("]")]
-endingNumber = int(re.search(' - (\d+)', scriptURL).group(1))
-
+endingNumber = int(re.search(' - ([0-9]+)', scriptURL).group(1))
 
 hiddenURL = _decode(letters.split(', '), endingNumber)
 
-download_link = get_download_url(hiddenURL)
+download_link = get_download_url(hiddenURL)[0]
 
-download(download_link)
+download(download_link, url)
