@@ -40,21 +40,22 @@ def info_extractor(link_url):
         episode_no = '0'
 
     if 'season' in link_url:
-        show_name = re.search('.com(.*)season', link_url).group(0).replace('.com/', '').replace('-season', '').replace(
-            '-', ' ').title()
+        show_name = re.sub('.com/|-season', '', re.search('.com(.*)season', link_url).group(0))
+        show_name = re.sub('-', ' ', show_name).title()
         season_no = re.search('season-[0-9]+', link_url).group(0).replace('season-', '')
     elif 'special' in link_url:
-        show_name = re.search('.com(.*)special', link_url).group(0).replace('.com/', '').replace('-', ' ').title()
+        show_name = re.sub('.com/', '', re.search('.com(.*)special', link_url).group(0))
+        show_name = re.sub('-', ' ', show_name).title()
         season_no = '0'
     elif 'ova' in link_url:
-        show_name = re.search('.com(.*)ova', link_url).group(0).replace('.com/', '').replace('-ova', '').replace(
-            '-', ' ').title()
+        show_name = re.sub('.com/|-ova', '', re.search('.com(.*)ova', link_url).group(0))
+        show_name = re.sub('-', ' ', show_name).title()
         episode_no = 0
         season_no = 0
         return "{0} OVA".format(show_name)
     else:
-        show_name = re.search('.com(.*)episode', link_url).group(0).replace('.com/', '').replace(
-            '-episode', '').replace('-', ' ').title()
+        show_name = re.sub('.com/|-episode', '', re.search('.com(.*)episode', link_url).group(0))
+        show_name = re.sub('-', ' ', show_name).title()
         season_no = '1'
     return "{0} S{1}E{2}".format(show_name, season_no, episode_no)
 
