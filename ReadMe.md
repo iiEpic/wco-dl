@@ -51,9 +51,10 @@ and then, execute with this :
 `./__main__.py`
 
 ## Python Support
-This script supports only Pythom 3 currently.
+This script supports only Python 3 currently.
 Has been tested on the following:
 * Python 3.5
+* Python 3.7
 * Python 3.8.1
 * [In-testing] Python 3.9
 
