@@ -11,6 +11,8 @@ from Downloader import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# TODO: Make the -n, --new argument to download the newest episode of a show
+
 
 class Lifter(object):
 
@@ -41,7 +43,7 @@ class Lifter(object):
                 self.download_show(url, season, ep_range, exclude, output)
             else:
                 # We are downloading a single episode
-                print('downloading singled')
+                print('downloading single')
                 self.download_single(url, extra, output)
         else:
             # Not a valid wcostream link
@@ -96,6 +98,10 @@ class Lifter(object):
 
     def download_single(self, url, extra, output):
         download_url = self.find_download_link(url)
+        if self.resolution == '480':
+            download_url = download_url[0][1]
+        else:
+            download_url = download_url[1][1]
         show_info = self.info_extractor(extra)
         if output is not None:
             output = output
@@ -138,6 +144,10 @@ class Lifter(object):
 
         for item in matching:
             download_url = self.find_download_link(item)
+            if self.resolution == '480':
+                download_url = download_url[0][1]
+            else:
+                download_url = download_url[1][1]
             show_info = self.info_extractor(item)
 
             if output is not None:
@@ -219,4 +229,4 @@ class Lifter(object):
         # print("debug:", backupURL)
         # print("debug:", sourceURLs)
 
-        return source_urls[0][1], backup_url
+        return source_urls, backup_url
