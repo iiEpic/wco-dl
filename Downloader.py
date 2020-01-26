@@ -19,7 +19,7 @@ class Downloader(object):
         self.output = output
 
         self.file_name = "{0}-{1}-{2}".format(self.show_name, self.season, self.episode)
-        self.file_path = self.output + "\\{0}.mp4".format(self.file_name)
+        self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
         print('[wco-dl] - Downloading {0}'.format(self.file_name))
         while True:
