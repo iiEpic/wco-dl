@@ -13,7 +13,10 @@ class Downloader(object):
 
         self.show_name = show_info[0]
         self.season = show_info[1]
-        self.episode = show_info[2]
+        if show_info[2] == "":
+            self.episode = show_info[3]
+        else:
+            self.episode = show_info[2]
         self.desc = show_info[3]
         self.header = header
         self.output = output
@@ -29,7 +32,8 @@ class Downloader(object):
                     handle.write(data)
 
             if os.path.getsize(self.file_path) == 0:
-                print("[wco-dl] Download for {0} did not complete, trying again".format(self.file_name))
+                print("[wco-dl] Download for {0} did not complete, please try again.\n".format(self.file_name))
+                break
             else:
-                print("[wco-dl] Download for {0} completed.".format(self.file_name))
+                print("[wco-dl] Download for {0} completed.\n".format(self.file_name))
                 break

@@ -126,13 +126,13 @@ class Lifter(object):
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range.split('-')[0]), int(ep_range.split('-')[1]) + 1)]
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s]
+                matching = [s for s in links if 'season' not in s or season in s]
             else:
                 matching = [s for s in links if season in s]
             matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s)[0]]
         elif season != "season-All":
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s]
+                matching = [s for s in links if 'season' not in s or season in s]
             else:
                 matching = [s for s in links if season in s]
         elif ep_range != 'All':
@@ -142,6 +142,7 @@ class Lifter(object):
         else:
             matching = links
 
+        matching.reverse()
         for item in matching:
             download_url = self.find_download_link(item)
             if self.resolution == '480':
