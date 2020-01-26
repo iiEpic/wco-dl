@@ -14,12 +14,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, ep_range, output):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output):
         # Define our variables
         self.url = url
         self.resolution = resolution
         self.logger = logger
+        self.season = season
         self.ep_range = ep_range
+        self.exclude = exclude
 
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
@@ -29,16 +31,6 @@ class Lifter(object):
         self.base_url = "https://wcostream.com"
         self.path = os.path.dirname(os.path.realpath(__file__))
 
-        def find_download_link():
-            page = requests.get(self.url)
-            soup = BeautifulSoup(page.text, 'html.parser')
-
-            self.script_url = soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element.text
-            self.letters = self.script_url[self.script_url.find("[") + 1:self.script_url.find("]")]
-            self.ending_number = int(re.search(' - ([0-9]+)', self.script_url).group(1))
-            self.hidden_url = self._decode(self.letters.split(', '), self.ending_number)
-            return self.get_download_url(self.hidden_url)[0]
-
         # Check if the URL is valid
         valid_link, extra = self.is_valid()
         if valid_link:
@@ -46,17 +38,11 @@ class Lifter(object):
             if extra[0] == "anime":
                 # We are downloading multiple episodes
                 print("downloading show")
+                self.download_show(url, season, ep_range, exclude, output)
             else:
                 # We are downloading a single episode
-                print('downloading single')
-                self.download_url = find_download_link()
-                self.show_info = self.info_extractor(extra)
-                if output is not None:
-                    self.output = output
-                else:
-                    self.output = self.path_creator(self.show_info[0])
-                Downloader(download_url=self.download_url, output=self.output, header=self.header,
-                           show_info=self.show_info)
+                print('downloading singled')
+                self.download_single(url, extra, output)
         else:
             # Not a valid wcostream link
             print(extra)
@@ -88,6 +74,16 @@ class Lifter(object):
 
         return response
 
+    def find_download_link(self, url):
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+
+        script_url = soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element.text
+        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
+        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
+        hidden_url = self._decode(letters.split(', '), ending_number)
+        return self.get_download_url(hidden_url)[0]
+
     def _decode(self, array, ending):
         iframe = ''
         for item in array:
@@ -98,14 +94,62 @@ class Lifter(object):
         html = BeautifulSoup(iframe, 'html.parser')
         return self.base_url + html.find("iframe")['src']
 
-    def download_single(self):
-        pass
+    def download_single(self, url, extra, output):
+        download_url = self.find_download_link(url)
+        show_info = self.info_extractor(extra)
+        if output is not None:
+            output = output
+        else:
+            output = self.path_creator(show_info[0])
+        Downloader(download_url=download_url, output=output, header=self.header,
+                   show_info=show_info)
 
-    def download_show(self):
-        pass
+    def download_show(self, url, season, ep_range, exclude, output):
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, 'html.parser')
+        links = []
+        for link in soup.findAll('a', {'class': 'sonra'}):
+            if link['href'] not in links:
+                links.append(link['href'])
+        if exclude is not None:
+            excluded = [i for e in exclude for i in links if re.search(e, i)]
+            links = [item for item in links if item not in excluded]
+        season = "season-" + season
+
+        if season != "season-All" and ep_range != "All":
+            episodes = ["episode-{0}".format(n) for n in
+                        range(int(ep_range.split('-')[0]), int(ep_range.split('-')[1]) + 1)]
+            if season == 'season-1':
+                matching = [s for s in links if 'season' not in s]
+            else:
+                matching = [s for s in links if season in s]
+            matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s)[0]]
+        elif season != "season-All":
+            if season == 'season-1':
+                matching = [s for s in links if 'season' not in s]
+            else:
+                matching = [s for s in links if season in s]
+        elif ep_range != 'All':
+            episodes = ["episode-{0}".format(n) for n in
+                        range(int(ep_range.split('-')[0]), int(ep_range.split('-')[1]) + 1)]
+            matching = [s for s in links for i in episodes if i == re.search(r'episode-[0-9]+', s)[0]]
+        else:
+            matching = links
+
+        for item in matching:
+            download_url = self.find_download_link(item)
+            show_info = self.info_extractor(item)
+
+            if output is not None:
+                output = output
+            else:
+                output = self.path_creator(show_info[0])
+            Downloader(download_url=download_url, output=output, header=self.header,
+                       show_info=show_info)
 
     @staticmethod
     def info_extractor(url):
+        url = re.sub('https://www.wcostream.com/', '', url)
         try:
             if "season" in url:
                 show_name, season, episode, desc = re.findall(r'([a-zA-Z0-9].+)\s(season\s\d+\s?)(episode\s\d+\s)?(.+)',
@@ -116,8 +160,8 @@ class Lifter(object):
                 season = "season 1"
         except:
             show_name = url
-            season = "season 1"
-            episode = "episode 0"
+            season = "Season 1"
+            episode = "Episode 0"
             desc = ""
         return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip()
 

@@ -17,8 +17,12 @@ class Main():
         required_args = parser.add_argument_group('Required Arguments :')
         required_args.add_argument('-i', '--input', nargs=1, help='Inputs the URL to show.')
         parser.add_argument('-hd', '--highdef', help='If you wish to get 720p', action="store_true")
-        parser.add_argument('-rn', '--range', nargs=1, help='Specifies the range of episodes to download.',
+        parser.add_argument('-epr', '--episoderange', nargs=1, help='Specifies the range of episodes to download.',
                             default='All')
+        parser.add_argument('-se', '--season', nargs=1, help='Specifies the season to download.',
+                            default='All')
+        parser.add_argument('-x', '--exclude', nargs=1, help='Specifies the episodes to not download (ie ova).',
+                            default=None)
         parser.add_argument('-o', '--output', nargs=1, help='Specifies the directory of which to save the files.')
         parser.add_argument("-v", "--verbose", help="Prints important debugging messages on screen.",
                             action="store_true")
@@ -47,10 +51,16 @@ class Main():
             print("Please enter the required argument. Run __main__.py --help")
             exit()
         else:
-            if type(args.range) == list:
-                args.range = args.range[0]
+            if type(args.episoderange) == list:
+                args.episoderange = args.episoderange[0]
+            if type(args.season) == list:
+                args.season = args.season[0]
             if type(args.output) == list:
                 args.output = args.output[0]
-
-            Lifter(url=args.input[0], resolution=args.highdef, logger=logger, ep_range=args.range,
-                   output=args.output)
+            if type(args.exclude) == list:
+                if ',' in args.exclude[0]:
+                    args.exclude = args.exclude[0].split(',')
+                else:
+                    args.exclude = args.exclude[0]
+            Lifter(url=args.input[0], resolution=args.highdef, logger=logger, season=args.season,
+                   ep_range=args.episoderange, exclude=args.exclude, output=args.output)
