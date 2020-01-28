@@ -1,12 +1,12 @@
-# Wco-DL
+# Wco-DL [![GitHub release](https://img.shields.io/github/release/EpicUnknown/wco-dl.svg?style=flat-square)](https://github.com/EpicUnknown/wco-dl/releases/latest) | [![Github All Releases](https://img.shields.io/github/downloads/EpicUnknown/wco-dl/total.svg?style=flat-square)](https://github.com/EpicUnknown/wco-dl/releases)
 
 wco-dl is a Command-line program to download cartoons/anime/movies from WCOStream.com.
 
 > Downloading and distributing this content may be illegal.This script was written for education purposes purely and you are responsible for its use.
 
-> Support these cartoon/anime streaming websites by buying a premium account.
+> Support these cartoon/anime streaming websites by buying a premium account and registering!
 
-## Table of Content
+## Table of Contents
 
 * [Dependencies Installation](#dependencies-installation)
 * [Installation](#installation)
@@ -33,7 +33,7 @@ This script can run on multiple Operating Systems. But, the script depends on so
 2.) Browse to the directory of this script and open command prompt/shell in that directory and run this command :
 
 ```
-python pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Installation
@@ -51,18 +51,18 @@ and then, execute with this :
 `./__main__.py`
 
 ## Python Support
-This script supports only Python 3 currently.
-Has been tested on the following:
-* Python 3.5
-* Python 3.7
-* Python 3.8.1
-* [In-testing] Python 3.9
+This script supports only Python 3.5 or newer
+- [ ] Python 2.7 or earlier (Will not support)
+- [x] Python 3.5
+- [x] Python 3.7
+- [x] Python 3.8.1
+- [ ] Python 3.9 __[In-Testing]__
 
 ## Windows Binary
 It is recommended that windows users use this binary to save both, your head and time from installing all the dependencies. 
 
 Go download this binary and start using the script right off the bat:
-* `Binary (x86)` : Not Ready Yet
+* `Binary (x86)` : [Click Here](https://github.com/EpicUnknown/wco-dl/releases/latest)
 
 
 ## List of Arguments
@@ -109,13 +109,15 @@ After you've saved this script in a directory/folder, you need to open `command 
 `__main__.py -i "<URL TO THE SHOW>"`
 
 ### Example Commands
-`__main__.py -i "<URL>" -x special,ova -se 2 -epr 1-10` - Download Episodes 1-10 in Season 2 minus specials and ovas
+`__main__.py -i "<Whole Show URL>" -x special,ova -se 2 -epr 1-10` - Download Episodes 1-10 in Season 2 minus specials and ovas
 
-`__main__.py -i "<URL>" -o "/home/username/shows/showname` - Download to a specific path!
+`__main__.py -i "<Single Episode URL>" -o "/home/username/shows/showname` - Download to a specific path!
 
-`__main__.py -i "<URL>" -epr 1-10` - Download Episodes 1-10 in ALL seasons
+`__main__.py -i "<Whole Show URL>" -epr 1-10` - Download Episodes 1-10 in ALL seasons
 
-`__main__.py -i "<URL>" -se 2` - Download entire of Season 2
+`__main__.py -i "<Whole Show URL>" -se 2` - Download entire of Season 2
+
+`__main__.py -i "<Whole Show URL>" -se 2 -epr 5-5` - Download Episode 5 of Season 2
 
 ### Example URLs
 * WCOStream :
