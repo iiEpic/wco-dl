@@ -38,7 +38,7 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
    - The program will reach out to wcostream and find out how many episodes are in `My Favorite Anime`
    - It will display in a neat fashion as shown below
    - If I'm missing any I can run the following command to grab the missing files
-   - `__main__.py -i https://www.wcostream.com/anime/my-favorite-anime/ --fix`
+   - `__main__.py -i https://www.wcostream.com/anime/another-good-anime/ --fix`
 
 | Show Name  | Completion  |
 | ------------- | ------------ |
