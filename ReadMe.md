@@ -8,6 +8,7 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
 
 ## Table of Contents
 
+* [To-Do](#to-do)
 * [Dependencies Installation](#dependencies-installation)
 * [Installation](#installation)
 * [Python Support](#python-support)
@@ -22,6 +23,27 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
 * [Opening An Issue/Requesting A Site](#opening-an-issuerequesting-a-site)
     * [Reporting Issues](#reporting-issues)
     * [Suggesting A Feature](#suggesting-a-feature)
+
+## To-Do
+- [ ] Create argument `-n` to download newest show when using the whole show URL
+ - (Example: wcostream.com/anime/show-name)
+- [ ] Save all previously downloaded show names and output locations in a text file
+- [ ] Scraper Mode
+ - When calling this argument `-s`, it will check all of your previously downloaded shows *(see above)* and see if there is a new episode out
+- If there is, it will begin downloading it to the directory where the previous episode was downloaded
+- [ ] Possibly adding the ability to track if user has all the shows out for that Anime/Cartoon
+ - Example.
+   - There are 12 episodes of `My Favorite Anime`
+   - I tell the program where I stored `My Favorite Anime`
+   - The program will reach out to wcostream and find out how many episodes are in `My Favorite Anime`
+   - It will display in a neat fashion as shown below
+   - If I'm missing any I can run the following command to grab the missing files
+   - `__main__.py -i https://www.wcostream.com/anime/my-favorite-anime/ --fix`
+
+| Show Name  | Completion  |
+| ------------- | ------------ |
+| My Favorite Anime  | 12/12  |
+| !! Another Good Anime  | 10/12 !!  |
 
 ## Dependencies Installation
 This script can run on multiple Operating Systems. But, the script depends on some external binaries or libs.
