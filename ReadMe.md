@@ -25,8 +25,8 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
     * [Suggesting A Feature](#suggesting-a-feature)
 
 ## To-Do
-- [ ] Create argument `-n` to download newest show when using the whole show URL
- - (Example: wcostream.com/anime/show-name)
+- [ ] Create argument `-n` to download newest show when using the whole show URL using the command below
+ - `_main__.py -i https://www.wcostream.com/anime/my-favorite-anime/ -n`
 - [ ] Save all previously downloaded show names and output locations in a text file
 - [ ] Scraper Mode
  - When calling this argument `-s`, it will check all of your previously downloaded shows *(see above)* and see if there is a new episode out
