@@ -106,6 +106,8 @@ Currently, the script supports these arguments :
 ## Usage
 With this script, you have to pass arguments in order to be able to download anything. Passing arguments in a script is pretty easy. Since the script is pretty basic, it doesn't have too many arguments. Go check the [`ARGUMENTS SECTION`](https://github.com/EpicUnknown/wco-dl#list-of-arguments) to know more about which arguments the script offers.
 
+Default Download Location will be the directory in which you run this script. Inside of an Output folder will be each of the show names you have downloaded.
+
 Follow the instructions according to your OS :
 
 ### Windows
