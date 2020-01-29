@@ -85,6 +85,7 @@ It is recommended that windows users use this binary to save both, your head and
 
 Go download this binary and start using the script right off the bat:
 * `Binary (x86)` : [Click Here](https://github.com/EpicUnknown/wco-dl/releases/latest)
+* `Binary (x64)` : [Click Here](https://github.com/EpicUnknown/wco-dl/releases/latest)
 
 
 ## List of Arguments
