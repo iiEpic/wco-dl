@@ -73,9 +73,9 @@ and then, execute with this :
 `./__main__.py`
 
 ## Python Support
-This script supports only Python 3.5 or newer
 - [ ] Python 2.7 or earlier (Will not support)
-- [x] Python 3.5
+- [x] Python 3.5 (Episode Range not working atm)
+- [x] Python 3.6
 - [x] Python 3.7
 - [x] Python 3.8.1
 - [ ] Python 3.9 __[In-Testing]__
