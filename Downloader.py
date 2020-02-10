@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import re
 from cfscrape import create_scraper
 from requests import session
 from tqdm import tqdm
@@ -12,16 +13,18 @@ class Downloader(object):
         sess = create_scraper(sess)
 
         self.show_name = show_info[0]
-        self.season = show_info[1]
+        self.season = re.search(r'(\d+)', show_info[1])[1]
         if show_info[2] == "":
-            self.episode = show_info[3]
+            self.episode = re.search(r'(\d+)', show_info[3])[1]
         else:
-            self.episode = show_info[2]
+            self.episode = re.search(r'(\d+)', show_info[2])[1]
         self.desc = show_info[3]
         self.header = header
         self.output = output
 
-        self.file_name = "{0}-{1}-{2}".format(self.show_name, self.season, self.episode)
+        self.file_name = "{0}-S{1}E{2}-{3}".format(self.show_name, self.season, self.episode, self.desc)
+        print(self.file_name)
+        return
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
         print('[wco-dl] - Downloading {0}'.format(self.file_name))
@@ -32,8 +35,8 @@ class Downloader(object):
                     handle.write(data)
 
             if os.path.getsize(self.file_path) == 0:
-                print("[wco-dl] Download for {0} did not complete, please try again.\n".format(self.file_name))
+                print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
                 break
             else:
-                print("[wco-dl] Download for {0} completed.\n".format(self.file_name))
+                print("[wco-dl] - Download for {0} completed.\n".format(self.file_name))
                 break
