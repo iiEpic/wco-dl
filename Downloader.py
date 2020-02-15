@@ -23,8 +23,6 @@ class Downloader(object):
         self.output = output
 
         self.file_name = "{0}-S{1}E{2}-{3}".format(self.show_name, self.season, self.episode, self.desc)
-        print(self.file_name)
-        return
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
         print('[wco-dl] - Downloading {0}'.format(self.file_name))
@@ -36,6 +34,9 @@ class Downloader(object):
 
             if os.path.getsize(self.file_path) == 0:
                 print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
+                # Upon failure of download append the episode name, file_name, to a text file in the same directory
+                # After finishing download all the shows the program will see if that text file exists and attempt
+                # to re-download the missing files
                 break
             else:
                 print("[wco-dl] - Download for {0} completed.\n".format(self.file_name))
