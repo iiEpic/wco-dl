@@ -12,6 +12,7 @@ from Downloader import *
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # TODO: Make the -n, --new argument to download the newest episode of a show
+# TODO: Make it track missed episodes and retry when done
 
 
 class Lifter(object):
@@ -24,6 +25,7 @@ class Lifter(object):
         self.season = season
         self.ep_range = ep_range
         self.exclude = exclude
+        self.output = output.replace("/", "\")
 
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
@@ -50,13 +52,15 @@ class Lifter(object):
             print(extra)
             exit()
 
-    @staticmethod
-    def path_creator(anime_name):
+    def check_output(self, anime_name):
         output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + "/")
-        if not os.path.exists("Output"):
-            os.makedirs("Output")
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
+        if not os.path.exists(self.output):
+            if not os.path.exists("Output"):
+                os.makedirs("Output")
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+        else:
+            output_directory = self.output
         return output_directory
 
     def request_c(self, url, extraHeaders=None):
@@ -103,10 +107,8 @@ class Lifter(object):
         else:
             download_url = download_url[1][1]
         show_info = self.info_extractor(extra)
-        if output is not None:
-            output = output
-        else:
-            output = self.path_creator(show_info[0])
+        output = self.check_output(show_info[0])
+
         Downloader(download_url=download_url, output=output, header=self.header,
                    show_info=show_info)
 
@@ -150,11 +152,8 @@ class Lifter(object):
             else:
                 download_url = download_url[1][1]
             show_info = self.info_extractor(item)
+            output = self.check_output(show_info[0])
 
-            if output is not None:
-                output = output
-            else:
-                output = self.path_creator(show_info[0])
             Downloader(download_url=download_url, output=output, header=self.header,
                        show_info=show_info)
 
