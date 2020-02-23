@@ -15,9 +15,9 @@ class Downloader(object):
         self.show_name = show_info[0]
         self.season = re.search(r'(\d+)', show_info[1])[1]
         if show_info[2] == "":
-            self.episode = re.search(r'(\d+)', show_info[3])[1]
+            self.episode = '{:2d}'.format(re.search(r'(\d+)', show_info[3])[1])
         else:
-            self.episode = re.search(r'(\d+)', show_info[2])[1]
+            self.episode = '{:2d}'.format(re.search(r'(\d+)', show_info[2])[1])
         self.desc = show_info[3]
         self.header = header
         self.output = output

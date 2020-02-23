@@ -138,7 +138,7 @@ class Lifter(object):
         elif ep_range != 'All':
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range.split('-')[0]), int(ep_range.split('-')[1]) + 1)]
-            matching = [s for s in links for i in episodes if i == re.search(r'episode-[0-9]+', s)[0]]
+            matching = [s for s in links for i in episodes if re.search("{0}-".format(i), s)]
         else:
             matching = links
 
