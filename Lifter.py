@@ -27,6 +27,8 @@ class Lifter(object):
         self.exclude = exclude
         if output is None:
             self.output = ""
+        else:
+            self.output = output
 
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
@@ -54,14 +56,16 @@ class Lifter(object):
             exit()
 
     def check_output(self, anime_name):
-        output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + "/")
+        output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + os.sep)
+        if self.output != "":
+            output_directory = re.sub(r'[\\|/]', os.sep, self.output)
         if not os.path.exists(self.output):
             if not os.path.exists("Output"):
                 os.makedirs("Output")
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         else:
-            output_directory = self.output.replace("/", "\\")
+            output_directory = re.sub(r'[\\|/]', os.sep, self.output)
         return output_directory
 
     def request_c(self, url, extraHeaders=None):
