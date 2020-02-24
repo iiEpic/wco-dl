@@ -13,11 +13,11 @@ class Downloader(object):
         sess = create_scraper(sess)
 
         self.show_name = show_info[0]
-        self.season = re.search(r'(\d+)', show_info[1])[1]
+        self.season = re.search(r'(\d+)', show_info[1]).group(1)
         if show_info[2] == "":
-            self.episode = '{:2d}'.format(re.search(r'(\d+)', show_info[3])[1])
+            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[3]).group(1).zfill(2))
         else:
-            self.episode = '{:2d}'.format(re.search(r'(\d+)', show_info[2])[1])
+            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[2]).group(1).zfill(2))
         self.desc = show_info[3]
         self.header = header
         self.output = output

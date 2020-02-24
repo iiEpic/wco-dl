@@ -25,7 +25,8 @@ class Lifter(object):
         self.season = season
         self.ep_range = ep_range
         self.exclude = exclude
-        self.output = output.replace("/", "\")
+        if output is None:
+            self.output = ""
 
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
@@ -60,7 +61,7 @@ class Lifter(object):
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         else:
-            output_directory = self.output
+            output_directory = self.output.replace("/", "\\")
         return output_directory
 
     def request_c(self, url, extraHeaders=None):
@@ -131,7 +132,7 @@ class Lifter(object):
                 matching = [s for s in links if 'season' not in s or season in s]
             else:
                 matching = [s for s in links if season in s]
-            matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s)[0]]
+            matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s).group(0)]
         elif season != "season-All":
             if season == 'season-1':
                 matching = [s for s in links if 'season' not in s or season in s]
