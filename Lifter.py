@@ -28,7 +28,10 @@ class Lifter(object):
         if output is None:
             self.output = ""
         else:
-            self.output = output
+            if output == ".":
+                self.output = os.getcwd()
+            else:
+                self.output = output
 
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
