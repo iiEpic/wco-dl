@@ -6,6 +6,8 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
 
 > Support these cartoon/anime streaming websites by buying a premium account and registering!
 
+Please go check out the wiki as it is indepth on what this script does.
+
 ## Table of Contents
 
 * [To-Do](#to-do)
