@@ -6,10 +6,14 @@ import logging
 import platform
 from Lifter import *
 from version import __version__
+from Settings import Settings
 
 
-class Main():
+class Main:
     if __name__ == '__main__':
+        # Run the settings script
+        settings = Settings()
+
         parser = argparse.ArgumentParser(description='wco-dl downloads shows from wcostream.com')
 
         parser.add_argument('--version', action='store_true', help='Shows version and exits.')
@@ -26,6 +30,7 @@ class Main():
         parser.add_argument('-o', '--output', nargs=1, help='Specifies the directory of which to save the files.')
         parser.add_argument("-v", "--verbose", help="Prints important debugging messages on screen.",
                             action="store_true")
+        parser.add_argument('-n', '--newest', help='Get the newest episode in the series.', action='store_true')
         logger = "False"
         args = parser.parse_args()
 
@@ -52,7 +57,10 @@ class Main():
             exit()
         else:
             if type(args.episoderange) == list:
-                args.episoderange = args.episoderange[0]
+                if '-' in args.episoderange[0]:
+                    args.episoderange = args.episoderange[0].split('-')
+                else:
+                    args.episoderange = args.episoderange[0]
             if type(args.season) == list:
                 args.season = args.season[0]
             if type(args.output) == list:
@@ -63,4 +71,5 @@ class Main():
                 else:
                     args.exclude = args.exclude[0]
             Lifter(url=args.input[0], resolution=args.highdef, logger=logger, season=args.season,
-                   ep_range=args.episoderange, exclude=args.exclude, output=args.output)
+                   ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
+                   settings=settings)

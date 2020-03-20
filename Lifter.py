@@ -11,13 +11,12 @@ from Downloader import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# TODO: Make the -n, --new argument to download the newest episode of a show
 # TODO: Make it track missed episodes and retry when done
 
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -25,6 +24,8 @@ class Lifter(object):
         self.season = season
         self.ep_range = ep_range
         self.exclude = exclude
+        self.newest = newest
+        self.settings = settings
         if output is None:
             self.output = ""
         else:
@@ -45,14 +46,14 @@ class Lifter(object):
         valid_link, extra = self.is_valid()
         if valid_link:
             # Check to see if we are downloading a single episode or multiple
-            if extra[0] == "anime":
+            if extra[0] == "anime/":
                 # We are downloading multiple episodes
-                print("downloading show")
-                self.download_show(url, season, ep_range, exclude, output)
+                print("Downloading show")
+                self.download_show(url)
             else:
                 # We are downloading a single episode
-                print('downloading single')
-                self.download_single(url, extra, output)
+                print('Downloading single')
+                self.download_single(url, extra)
         else:
             # Not a valid wcostream link
             print(extra)
@@ -61,14 +62,14 @@ class Lifter(object):
     def check_output(self, anime_name):
         output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + os.sep)
         if self.output != "":
-            output_directory = re.sub(r'[\\|/]', os.sep, self.output)
+            output_directory = self.output.translate(str.maketrans({'\\': os.sep, '/': os.sep}))
         if not os.path.exists(self.output):
             if not os.path.exists("Output"):
                 os.makedirs("Output")
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         else:
-            output_directory = re.sub(r'[\\|/]', os.sep, self.output)
+            output_directory = self.output.translate(str.maketrans({'\\': os.sep, '/': os.sep}))
         return output_directory
 
     def request_c(self, url, extraHeaders=None):
@@ -108,7 +109,7 @@ class Lifter(object):
         html = BeautifulSoup(iframe, 'html.parser')
         return self.base_url + html.find("iframe")['src']
 
-    def download_single(self, url, extra, output):
+    def download_single(self, url, extra):
         download_url = self.find_download_link(url)
         if self.resolution == '480':
             download_url = download_url[0][1]
@@ -118,19 +119,34 @@ class Lifter(object):
         output = self.check_output(show_info[0])
 
         Downloader(download_url=download_url, output=output, header=self.header,
-                   show_info=show_info)
+                   show_info=show_info, settings=self.settings)
 
-    def download_show(self, url, season, ep_range, exclude, output):
+    def download_show(self, url):
         page = requests.get(url)
         soup = BeautifulSoup(page.content, 'html.parser')
+        ep_range = self.ep_range
         links = []
         for link in soup.findAll('a', {'class': 'sonra'}):
             if link['href'] not in links:
                 links.append(link['href'])
-        if exclude is not None:
-            excluded = [i for e in exclude for i in links if re.search(e, i)]
+
+        if self.exclude is not None:
+            excluded = [i for e in self.exclude for i in links if re.search(e, i)]
             links = [item for item in links if item not in excluded]
-        season = "season-" + season
+        season = "season-" + self.season
+
+        if len(ep_range) == 1:
+            ep_range = '{0}-{0}'.format(ep_range)
+
+        if ep_range == 'l5':  # L5 (Last five)
+            links = links[:5]
+            ep_range = 'All'
+            season = 'season-All'
+
+        if self.newest:  # True or False
+            links = links[0:1]
+            ep_range = 'All'
+            season = 'season-All'
 
         if season != "season-All" and ep_range != "All":
             episodes = ["episode-{0}".format(n) for n in
@@ -152,7 +168,8 @@ class Lifter(object):
         else:
             matching = links
 
-        matching.reverse()
+        if len(matching) < 1:
+            matching.reverse()
         for item in matching:
             download_url = self.find_download_link(item)
             if self.resolution == '480':
@@ -163,7 +180,7 @@ class Lifter(object):
             output = self.check_output(show_info[0])
 
             Downloader(download_url=download_url, output=output, header=self.header,
-                       show_info=show_info)
+                       show_info=show_info, settings=self.settings)
 
     @staticmethod
     def info_extractor(url):
@@ -181,12 +198,12 @@ class Lifter(object):
             season = "Season 1"
             episode = "Episode 0"
             desc = ""
-        return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip()
+        return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip(), url
 
     def is_valid(self):
-        website = re.findall('https://(www.)?wcostream.com/(anime)?/?([a-zA-Z].+$)?', self.url)
+        website = re.findall('https://(www.)?wcostream.com/(anime/)?([a-zA-Z].+$)?', self.url)
         if website:
-            if website[0][1] == "anime":
+            if website[0][1] == "anime/":
                 return True, (website[0][1], website[0][2])
             return True, website[0][2]
         return False, '[wco-dl] Not correct wcostream website.'

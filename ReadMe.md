@@ -25,7 +25,7 @@ wco-dl is a Command-line program to download cartoons/anime/movies from WCOStrea
     * [Suggesting A Feature](#suggesting-a-feature)
 
 ## To-Do
-- [ ] Create argument `-n` to download newest show when using the whole show URL using the command below
+- [x] Create argument `-n` to download newest show when using the whole show URL using the command below
  - `_main__.py -i https://www.wcostream.com/anime/my-favorite-anime/ -n`
 - [ ] Save all previously downloaded show names and output locations in a text file
 - [ ] Scraper Mode
@@ -100,7 +100,7 @@ Currently, the script supports these arguments :
 -se,--season                           Selects the season to download of a show (Default = All)
 -epr,--episoderange                    Selects the range of episodes to download (Default = All) [ Ex : --range 1-10 (This will download first 10 episodes of ALL Seasons!)]
 -x,--exclude                           Specifies what shows not to download [Ex: -x ova,special will make it so no ova or special episodes are downloaded]
-[In-Progress] -n,--newest              Downloads the newest episode of the show given.
+-n,--newest                            Downloads the newest episode of the show given.
 ```
 
 ## Usage
@@ -142,7 +142,7 @@ After you've saved this script in a directory/folder, you need to open `command 
 
 `__main__.py -i "<Whole Show URL>" -se 2` - Download entire of Season 2
 
-`__main__.py -i "<Whole Show URL>" -se 2 -epr 5-5` - Download Episode 5 of Season 2
+`__main__.py -i "<Whole Show URL>" -se 2 -epr 5` - Download Episode 5 of Season 2
 
 ### Example URLs
 * WCOStream :
@@ -150,7 +150,7 @@ After you've saved this script in a directory/folder, you need to open `command 
     * Whole Show : [https://www.wcostream.com/anime/mairimashita-iruma-kun-english-subbed](https://www.wcostream.com/anime/mairimashita-iruma-kun-english-subbed)
 
 ## Features
-This is a very basic and small sript, so at the moment it only have a few features.
+This is a very basic and small script, so at the moment it only have a few features.
 * Downloads a Single episode
 * Downloads and puts them all in a directory named "Output".
 * Downloads all the episodes for a show available on WCO Stream.
