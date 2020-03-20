@@ -138,7 +138,7 @@ class Lifter(object):
         if len(ep_range) == 1:
             ep_range = '{0}-{0}'.format(ep_range)
 
-        if ep_range == 'l5':  # L5 (Last five)
+        if ep_range == 'l5' or ep_range == 'L5':  # L5 (Last five)
             links = links[:5]
             ep_range = 'All'
             season = 'season-All'

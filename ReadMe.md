@@ -144,6 +144,8 @@ After you've saved this script in a directory/folder, you need to open `command 
 
 `__main__.py -i "<Whole Show URL>" -se 2 -epr 5` - Download Episode 5 of Season 2
 
+`__main__.py -i "<Whole Show URL>" -epr L5` - Get the newest five episodes of the series
+
 ### Example URLs
 * WCOStream :
     * Single Episode : [https://www.wcostream.com/mairimashita-iruma-kun-episode-17-english-subbed](https://www.wcostream.com/mairimashita-iruma-kun-episode-17-english-subbed)
