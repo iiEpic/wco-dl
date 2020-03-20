@@ -8,21 +8,28 @@ from tqdm import tqdm
 
 
 class Downloader(object):
-    def __init__(self, download_url, output, header, show_info):
+    def __init__(self, download_url, output, header, show_info, settings):
         sess = session()
         sess = create_scraper(sess)
 
         self.show_name = show_info[0]
-        self.season = re.search(r'(\d+)', show_info[1]).group(1)
+        self.season = re.search(r'(\d+)', show_info[1]).group(1).zfill(settings.get_setting('seasonPadding'))
         if show_info[2] == "":
-            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[3]).group(1).zfill(2))
+            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[3]).group(1).zfill(
+                settings.get_setting('episodePadding')))
         else:
-            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[2]).group(1).zfill(2))
+            self.episode = '{0}'.format(re.search(r'(\d+)', show_info[2]).group(1).zfill(
+                settings.get_setting('episodePadding')))
         self.desc = show_info[3]
         self.header = header
         self.output = output
 
-        self.file_name = "{0}-S{1}E{2}-{3}".format(self.show_name, self.season, self.episode, self.desc)
+        if settings.get_setting('includeShowDesc'):
+            self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
+                                                                       episode=self.episode, desc=self.desc)
+        else:
+            self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
+                                                                       episode=self.episode)
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
         print('[wco-dl] - Downloading {0}'.format(self.file_name))
@@ -37,6 +44,10 @@ class Downloader(object):
                 # Upon failure of download append the episode name, file_name, to a text file in the same directory
                 # After finishing download all the shows the program will see if that text file exists and attempt
                 # to re-download the missing files
+                f_path = os.path.dirname(os.path.realpath(__file__)) + os.sep
+                f = open(f_path + "failed.txt", "a+")
+                f.write("{0},{1},{2}".format(self.file_name, self.output, show_info[4]))
+                f.close()
                 break
             else:
                 print("[wco-dl] - Download for {0} completed.\n".format(self.file_name))
