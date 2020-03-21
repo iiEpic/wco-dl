@@ -8,6 +8,7 @@ import base64
 import urllib3
 from bs4 import BeautifulSoup
 from Downloader import *
+from OutputSaver import OutputSaver
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,14 +27,7 @@ class Lifter(object):
         self.exclude = exclude
         self.newest = newest
         self.settings = settings
-        if output is None:
-            self.output = ""
-        else:
-            if output == ".":
-                self.output = os.getcwd()
-            else:
-                self.output = output
-
+        self.savedLocation = OutputSaver()
         self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 ' \
                           '(KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
         self.header = {
@@ -60,17 +54,26 @@ class Lifter(object):
             exit()
 
     def check_output(self, anime_name):
-        output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + os.sep)
-        if self.output != "":
-            output_directory = self.output.translate(str.maketrans({'\\': os.sep, '/': os.sep}))
-        if not os.path.exists(self.output):
-            if not os.path.exists("Output"):
-                os.makedirs("Output")
-            if not os.path.exists(output_directory):
-                os.makedirs(output_directory)
+        if self.output is None:
+            if self.settings.get_setting('useKnownDownloadLocation'):
+                if anime_name in self.savedLocation:
+                    self.output = self.savedLocation.get_location(anime_name)
+            if self.settings.get_setting('defaultOutputLocation') and self.output is None:
+                self.output = self.settings.get_setting('defaultOutputLocation')
+            else:
+                self.output = os.path.abspath("Output" + os.sep + str(anime_name) + os.sep)
         else:
-            output_directory = self.output.translate(str.maketrans({'\\': os.sep, '/': os.sep}))
-        return output_directory
+            if self.output[-1] in ('/', '\\') and len(self.output) > 1:
+                self.output = self.output[:-1]
+            if self.output == ".":
+                self.output = os.getcwd()
+            elif self.settings.get_setting('saveDownloadLocation'):
+                self.output.translate(str.maketrans({'\\': os.sep, '/': os.sep}))
+                self.savedLocation.set_location(anime_name, self.output)
+        if not os.path.exists(self.output):
+            print('The specified path does not exist please create it: {0}'.format(self.output))
+            exit(1)
+        return self.output
 
     def request_c(self, url, extraHeaders=None):
         myheaders = {
@@ -138,7 +141,7 @@ class Lifter(object):
         if len(ep_range) == 1:
             ep_range = '{0}-{0}'.format(ep_range)
 
-        if ep_range == 'l5':  # L5 (Last five)
+        if ep_range == 'l5' or ep_range == 'L5':  # L5 (Last five)
             links = links[:5]
             ep_range = 'All'
             season = 'season-All'
