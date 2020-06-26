@@ -93,7 +93,7 @@ class Lifter(object):
         page = requests.get(url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
-        script_url = soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element.text
+        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
         letters = script_url[script_url.find("[") + 1:script_url.find("]")]
         ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
         hidden_url = self._decode(letters.split(', '), ending_number)
