@@ -27,6 +27,8 @@ class Settings:
             self.loaded_settings['episodePadding'] = 2
             self.loaded_settings['seasonPadding'] = 2
             self.loaded_settings['defaultOutputLocation'] = False
+            self.loaded_settings['saveDownloadLocation'] = True
+            self.loaded_settings['useKnownDownloadLocation'] = True
 
             file = open('settings.json', 'w')
             file.write(json.dumps(self.loaded_settings, indent=4, sort_keys=True))
