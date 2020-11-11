@@ -150,8 +150,8 @@ After you've saved this script in a directory/folder, you need to open `command 
 
 ### Example URLs
 * WCOStream :
-    * Single Episode : [https://www.wcostream.com/mairimashita-iruma-kun-episode-17-english-subbed](https://www.wcostream.com/mairimashita-iruma-kun-episode-17-english-subbed)
-    * Whole Show : [https://www.wcostream.com/anime/mairimashita-iruma-kun-english-subbed](https://www.wcostream.com/anime/mairimashita-iruma-kun-english-subbed)
+    * Single Episode : (https://www.wcostream.com/cool-show-name-here-episode-17-english-subbed)
+    * Whole Show : (https://www.wcostream.com/anime/cool-show-name-here-english-subbed)
 
 ## Features
 This is a very basic and small script, so at the moment it only have a few features.
