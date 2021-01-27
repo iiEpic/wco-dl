@@ -1,1 +1,1 @@
-__version__ = '2021-01-21-iEpic'
+__version__ = '2021-01-26-iEpic'

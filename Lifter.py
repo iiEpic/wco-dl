@@ -3,6 +3,7 @@
 
 import os
 import re
+import sys
 import requests
 import base64
 import urllib3
@@ -57,7 +58,7 @@ class Lifter(object):
         else:
             # Not a valid wcostream link
             print(extra)
-            exit()
+            sys.exit()
 
     def check_output(self, anime_name):
         output_directory = os.path.abspath("Output" + os.sep + str(anime_name) + os.sep)

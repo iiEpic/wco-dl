@@ -3,6 +3,9 @@
 *.spec
 *.exe
 failed.txt
-/Output
 settings.json
+/Output
 /dist
+/build
+/.idea
+/__pycache__
