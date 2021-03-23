@@ -23,7 +23,7 @@ class Downloader(object):
         self.desc = show_info[3]
         self.header = header
         self.output = output
-        self.urls = backup_url
+        self.backup_url = backup_url
 
         if settings.get_setting('includeShowDesc'):
             self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
@@ -35,9 +35,9 @@ class Downloader(object):
 
         print('[wco-dl] - Downloading {0}'.format(self.file_name))
         while True:
-            if not self.start_download(download_url, False):
+            if not self.start_download(download_url):
                 print('[wco-dl] - Trying to download using the backup URL...')
-                if not self.start_download(self.urls, True):
+                if not self.start_download(self.backup_url):
                     print(f'[wco-dl] - Download for {self.file_name} did not complete, '
                           f'please create an issue on GitHub.\n')
                     f_path = os.path.dirname(os.path.realpath(__file__)) + os.sep
@@ -50,7 +50,7 @@ class Downloader(object):
             else:
                 break
 
-    def start_download(self, url, backup_url_flag):
+    def start_download(self, url):
         while True:
             dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
             with open(self.file_path, "wb") as handle:
