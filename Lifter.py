@@ -98,7 +98,7 @@ class Lifter(object):
         letters = script_url[script_url.find("[") + 1:script_url.find("]")]
         ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
         hidden_url = self._decode(letters.split(', '), ending_number)
-        return self.get_download_url(hidden_url)[0]
+        return self.get_download_url(hidden_url)
 
     def _decode(self, array, ending):
         iframe = ''
@@ -172,15 +172,15 @@ class Lifter(object):
         if len(matching) < 1:
             matching.reverse()
         for item in matching:
-            download_url = self.find_download_link(item)
-            if self.resolution == '480':
-                download_url = download_url[0][1]
+            source_url, backup_url = self.find_download_link(item)
+            if self.resolution == '480' or len(source_url[0]) > 2:
+                download_url = source_url[0][1]
             else:
-                download_url = download_url[1][1]
+                download_url = source_url[1][1]
             show_info = self.info_extractor(item)
             output = self.check_output(show_info[0])
 
-            Downloader(download_url=download_url, output=output, header=self.header,
+            Downloader(download_url=download_url, backup_url=backup_url, output=output, header=self.header,
                        show_info=show_info, settings=self.settings)
 
     @staticmethod
@@ -252,7 +252,7 @@ class Lifter(object):
             # Use the backup link in the 'onError' handler of the 'jw' player.
             backup_match = stream_pattern.search(html[html.find(b'jw.onError'):])
             backup_url = backup_match.group(1) if backup_match else ''
-        # print("debug:", backupURL)
-        # print("debug:", sourceURLs)
+        # print("debug:", source_urls)
+        # print("debug:", backup_url)
 
         return source_urls, backup_url
