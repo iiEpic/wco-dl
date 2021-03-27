@@ -63,12 +63,15 @@ class Downloader(object):
 
     def start_download(self, url):
         while True:
-            dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
-            with open(self.file_path, "wb") as handle:
-                with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
-                    for data in dlr.iter_content(chunk_size=1024):
-                        handle.write(data)
-                        pbar.update(len(data))
+            try:
+                dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
+                with open(self.file_path, "wb") as handle:
+                    with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                        for data in dlr.iter_content(chunk_size=1024):
+                            handle.write(data)
+                            pbar.update(len(data))
+            except:
+                return False
                 #Old way of downloading
                 #for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
                 #    handle.write(data)
