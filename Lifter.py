@@ -111,15 +111,15 @@ class Lifter(object):
         return self.base_url + html.find("iframe")['src']
 
     def download_single(self, url, extra):
-        download_url = self.find_download_link(url)
-        if self.resolution == '480':
-            download_url = download_url[0][1]
+        source_url, backup_url = self.find_download_link(url)
+        if self.resolution == '480' or len(source_url[0]) > 2:
+            download_url = source_url[0][1]
         else:
-            download_url = download_url[1][1]
+            download_url = source_url[1][1]
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(download_url=download_url, output=output, header=self.header,
+        Downloader(download_url=download_url, backup_url=backup_url, output=output, header=self.header,
                    show_info=show_info, settings=self.settings)
 
     def download_show(self, url):
