@@ -33,29 +33,42 @@ class Downloader(object):
                                                                        episode=self.episode)
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
-        print('[wco-dl] - Downloading {0}'.format(self.file_name))
-        while True:
-            if not self.start_download(download_url):
-                print('[wco-dl] - Trying to download using the backup URL...')
-                if not self.start_download(self.backup_url):
-                    print(f'[wco-dl] - Download for {self.file_name} did not complete, '
-                          f'please create an issue on GitHub.\n')
-                    f_path = os.path.dirname(os.path.realpath(__file__)) + os.sep
-                    f = open(f_path + "failed.txt", "a+")
-                    f.write("{0},{1},{2}".format(self.file_name, self.output, show_info[4]))
-                    f.close()
-                    break
+        if (settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
+            print("[wco-dl] - {0} skipped, already downloaded.".format(self.file_name))
+        else:
+            print('[wco-dl] - Downloading {0}'.format(self.file_name))
+            while True:
+                if not self.start_download(download_url):
+                    print('[wco-dl] - Trying to download using the backup URL...')
+                    if not self.start_download(self.backup_url):
+                        print(f'[wco-dl] - Download for {self.file_name} did not complete, '
+                            f'please create an issue on GitHub.\n')
+                        f_path = os.path.dirname(os.path.realpath(__file__)) + os.sep
+                        f = open(f_path + "failed.txt", "a+")
+                        f.write("{0},{1},{2}".format(self.file_name, self.output, show_info[4]))
+                        f.close()
+                        break
+                    else:
+                        break
                 else:
                     break
-            else:
-                break
-
+                
+    def check_if_downloaded(self, url):
+        print("Checking if video is already downloaded, this may take some time, you can change this in your settings.")
+        if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header).headers["content-length"])):
+            return True
+        return False
+    
     def start_download(self, url):
         while True:
             dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
             with open(self.file_path, "wb") as handle:
-                for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
-                    handle.write(data)
+                with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                    for data in dlr.iter_content(chunk_size=1024):
+                        handle.write(data)
+                        pbar.update(len(data))
+                #for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
+                    #handle.write(data)
 
             if os.path.getsize(self.file_path) == 0:
                 # print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
@@ -66,3 +79,4 @@ class Downloader(object):
             else:
                 print(f'[wco-dl] - Download for {self.file_name} completed.\n')
                 return True
+     
