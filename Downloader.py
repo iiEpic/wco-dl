@@ -6,7 +6,6 @@ from cfscrape import create_scraper
 from requests import session
 from tqdm import tqdm
 
-
 class Downloader(object):
     def __init__(self, download_url, backup_url, output, header, show_info, settings):
         self.sess = session()
@@ -33,7 +32,7 @@ class Downloader(object):
                                                                        episode=self.episode)
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
-        if (settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
+        if (os.path.exists(self.file_path) and settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
             print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
@@ -44,9 +43,8 @@ class Downloader(object):
                         print(f'[wco-dl] - Download for {self.file_name} did not complete, '
                             f'please create an issue on GitHub.\n')
                         f_path = os.path.dirname(os.path.realpath(__file__)) + os.sep
-                        f = open(f_path + "failed.txt", "a+")
-                        f.write("{0},{1},{2}".format(self.file_name, self.output, show_info[4]))
-                        f.close()
+                        with open(f_path + "failed.txt", "a+") as failed: 
+                            failed.write("{0},{1},{2}".format(self.file_name, self.output, show_info[4]))
                         break
                     else:
                         break
