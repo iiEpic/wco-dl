@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -27,6 +27,8 @@ class Lifter(object):
         self.exclude = exclude
         self.newest = newest
         self.settings = settings
+        self.database = database
+        
         if output is None:
             self.output = ""
         else:
@@ -47,6 +49,7 @@ class Lifter(object):
         valid_link, extra = self.is_valid()
         if valid_link:
             # Check to see if we are downloading a single episode or multiple
+            self.database.add_new_anime_to_database(self.url)
             if extra[0] == "anime/":
                 # We are downloading multiple episodes
                 print("Downloading show")
