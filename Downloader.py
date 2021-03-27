@@ -34,7 +34,7 @@ class Downloader(object):
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
         if (settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
-            print("[wco-dl] - {0} skipped, already downloaded.".format(self.file_name))
+            print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
             while True:
@@ -52,13 +52,15 @@ class Downloader(object):
                         break
                 else:
                     break
-                
+
     def check_if_downloaded(self, url):
-        print("Checking if video is already downloaded, this may take some time, you can change this in your settings.")
+        print('[wco-dl] - Checking if video is already downloaded, this may take some time, you can change this in your settings.')
         if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header).headers["content-length"])):
             return True
+        elif (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(self.backup_url, headers=self.header).headers["content-length"])):
+            return True
         return False
-    
+
     def start_download(self, url):
         while True:
             dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
@@ -67,8 +69,9 @@ class Downloader(object):
                     for data in dlr.iter_content(chunk_size=1024):
                         handle.write(data)
                         pbar.update(len(data))
+                #Old way of downloading
                 #for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
-                    #handle.write(data)
+                #    handle.write(data)
 
             if os.path.getsize(self.file_path) == 0:
                 # print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
@@ -77,6 +80,5 @@ class Downloader(object):
                 # to re-download the missing files
                 return False
             else:
-                print(f'[wco-dl] - Download for {self.file_name} completed.\n')
+                print('[wco-dl] - Download for {0} completed.\n'.format(self.file_name))
                 return True
-     
