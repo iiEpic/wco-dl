@@ -54,7 +54,7 @@ class Downloader(object):
                     break
 
     def check_if_downloaded(self, url):
-        print('[wco-dl] - Checking if video is already downloaded, this may take some time, you can change this in your settings.')
+        print('[wco-dl] - Checking if video is already downloaded, this may take some time, you can turn this off in your settings.')
         if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header).headers["content-length"])):
             return True
         elif (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(self.backup_url, headers=self.header).headers["content-length"])):
