@@ -36,7 +36,7 @@ class Downloader(object):
 
         if (os.path.exists(self.file_path) and settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
             print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
-        elif (os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0): 
+        elif (settings.get_setting('allowToResumeDownloads') and os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0): 
             self.start_download(download_url, os.path.getsize(self.file_path))
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
