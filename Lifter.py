@@ -103,6 +103,16 @@ class Lifter(object):
         hidden_url = self._decode(letters.split(', '), ending_number)
         return self.get_download_url(hidden_url)
 
+    def find_hidden_url(self, url): 
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+
+        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
+        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
+        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
+        hidden_url = self._decode(letters.split(', '), ending_number)
+        return hidden_url
+
     def _decode(self, array, ending):
         iframe = ''
         for item in array:
@@ -115,6 +125,7 @@ class Lifter(object):
 
     def download_single(self, url, extra):
         download_url = self.find_download_link(url)
+        hidden_url = self.find_hidden_url(url)
         if self.resolution == '480':
             download_url = download_url[0][1]
         else:
@@ -122,7 +133,7 @@ class Lifter(object):
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(download_url=download_url, output=output, header=self.header,
+        Downloader(download_url=download_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
                    show_info=show_info, settings=self.settings)
 
     def download_show(self, url):
@@ -176,6 +187,7 @@ class Lifter(object):
             matching.reverse()
         for item in matching:
             source_url, backup_url = self.find_download_link(item)
+            hidden_url = self.find_hidden_url(item)
             if self.resolution == '480' or len(source_url[0]) > 2:
                 download_url = source_url[0][1]
             else:
@@ -183,7 +195,7 @@ class Lifter(object):
             show_info = self.info_extractor(item)
             output = self.check_output(show_info[0])
 
-            Downloader(download_url=download_url, backup_url=backup_url, output=output, header=self.header,
+            Downloader(download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
                        show_info=show_info, settings=self.settings)
 
     @staticmethod
