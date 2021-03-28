@@ -30,10 +30,9 @@ class Settings:
             self.loaded_settings['saveDownloadLocation'] = True
             self.loaded_settings['useKnownDownloadLocation'] = True
             self.loaded_settings['checkIfFileIsAlreadyDownloaded'] = True
-            if (os.name == 'posix'):
-                self.loaded_settings['downloadsDatabaseLocation'] = "./database.p"
-            elif (os.name == 'nt'):
-                self.loaded_settings['downloadsDatabaseLocation'] = ".\\database.p"
+            self.loaded_settings['downloadsDatabaseLocation'] = ".{os_path}{file_name}".format(os_path=os.sep, file_name='database.p')
+            self.loaded_settings['allowToResumeDownloads'] = True
+            
             file = open('settings.json', 'w')
             file.write(json.dumps(self.loaded_settings, indent=4, sort_keys=True))
             file.close()
