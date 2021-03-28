@@ -7,7 +7,7 @@ from requests import session
 from tqdm import tqdm
 
 class Downloader(object):
-    def __init__(self, download_url, backup_url, output, header, show_info, settings):
+    def __init__(self, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings):
         self.sess = session()
         self.sess = create_scraper(self.sess)
 
@@ -23,6 +23,8 @@ class Downloader(object):
         self.header = header
         self.output = output
         self.backup_url = backup_url
+        self.hidden_url = hidden_url
+        self.user_agent = user_agent
 
         if settings.get_setting('includeShowDesc'):
             self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
@@ -34,6 +36,8 @@ class Downloader(object):
 
         if (os.path.exists(self.file_path) and settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
             print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
+        elif (os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0): 
+            self.start_download(download_url, os.path.getsize(self.file_path))
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
             while True:
@@ -55,21 +59,36 @@ class Downloader(object):
         print('[wco-dl] - Checking if video is already downloaded, this may take some time, you can turn this off in your settings.')
         if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header).headers["content-length"])):
             return True
-        elif (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(self.backup_url, headers=self.header).headers["content-length"])):
-            return True
         return False
 
-    def start_download(self, url):
+    def start_download(self, url, resume_bytes=None):
         while True:
-            dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
-            with open(self.file_path, "wb") as handle:
-                with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
-                    for data in dlr.iter_content(chunk_size=1024):
-                        handle.write(data)
-                        pbar.update(len(data))
-                #Old way of downloading
-                #for data in tqdm(dlr.iter_content(chunk_size=1024)):  # Added chunk size to speed up the downloads
-                #    handle.write(data)
+            if (resume_bytes != None and os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0):
+                print('Resuming download you can turn this off in your settings.')
+                host_url = self.sess.get(url).url
+                resume_header = {
+                    'Host': host_url.split("//")[-1].split("/")[0].split('?')[0],
+                    'User-Agent': self.user_agent,
+                    'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
+                    'Accept-Language': 'en-US,en;q=0.5',                                                                                                                      
+                    'Connection': 'keep-alive',
+                    'Referer': self.hidden_url.replace('https://wcostream.com', 'https://www.wcostream.com'),
+                    'Range': 'bytes={0}-'.format(resume_bytes),  
+                }
+                dlr = self.sess.get(host_url, stream=True, headers=resume_header)
+                with open(self.file_path, 'ab') as handle:
+                    with tqdm(unint='B', unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
+                        for data in dlr.iter_content(chunk_size=1024):
+                            handle.write(data)
+                            pbar.update(len(data))
+                return
+            else:
+                dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
+                with open(self.file_path, "wb") as handle:
+                    with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                        for data in dlr.iter_content(chunk_size=1024):
+                            handle.write(data)
+                            pbar.update(len(data))
 
             if os.path.getsize(self.file_path) == 0:
                 # print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
