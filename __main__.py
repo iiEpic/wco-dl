@@ -86,7 +86,6 @@ class Main:
                     args.exclude = args.exclude[0].split(',')
                 else:
                     args.exclude = args.exclude[0]
-
-            Lifter(url=args.input[0], resolution=args.highdef, logger=logger, season=args.season,
+            Lifter(url=args.input[0].replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                    settings=settings, database=database)
