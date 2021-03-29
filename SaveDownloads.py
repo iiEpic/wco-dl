@@ -2,7 +2,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-from typing import Set
 from Settings import Settings
 import os
 
