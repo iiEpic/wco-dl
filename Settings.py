@@ -32,6 +32,7 @@ class Settings:
             self.loaded_settings['checkIfFileIsAlreadyDownloaded'] = True
             self.loaded_settings['downloadsDatabaseLocation'] = ".{os_path}{file_name}".format(os_path=os.sep, file_name='database.p')
             self.loaded_settings['allowToResumeDownloads'] = True
+            self.loaded_settings['checkForUpdates'] = True
             
             file = open('settings.json', 'w')
             file.write(json.dumps(self.loaded_settings, indent=4, sort_keys=True))
