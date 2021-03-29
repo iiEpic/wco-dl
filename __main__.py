@@ -4,6 +4,7 @@
 import argparse
 import logging
 import platform
+import requests
 from Lifter import *
 from version import __version__
 from Settings import Settings
@@ -14,6 +15,11 @@ class Main:
         # Run the settings script
         settings = Settings()
         database = SaveDownloadToFile(settings)
+        
+        if settings.get_setting('checkForUpdates'):
+            r = requests.get('https://raw.githubusercontent.com/EpicUnknown/wco-dl/master/version.py').text.replace('_version__ = ', '').replace("'", '')
+            if (__version__ != r):
+                print('Newer version available, on https://github.com/EpicUnknown/wco-dl', end='\n\n')
 
         parser = argparse.ArgumentParser(description='wco-dl downloads shows from wcostream.com')
 
@@ -34,16 +40,28 @@ class Main:
         parser.add_argument('-n', '--newest', help='Get the newest episode in the series.', action='store_true')
         parser.add_argument('-sh', '--show_downloaded_animes', help='This will show all downloaded shows and episodes', action='store_true')
         parser.add_argument('-us', '--update_shows', help='This will update all shows in your database that have new episodes.', action='store_true')
+        parser.add_argument('-b', '--batch', help='Batch download, download multiple anime.', nargs=1)
 
         logger = "False"
         args = parser.parse_args()
+
+        if args.batch:
+            with open(args.batch[0], 'r') as anime_list:
+                for anime in anime_list:
+                    print(anime.replace('\n', ''))
+                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
+                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
+                    settings=settings, database=database)
+            print('Done')
+            exit()
 
         if args.update_shows: 
             print("Updating all shows, this will take a while.")
             for x in database.return_show_url():
                 Lifter(url=x, resolution=args.highdef, logger=logger, season=args.season,
                 ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                settings=settings, database=database)
+                settings=settings, database=database, update=True)
+            print('Done')
             exit()
 
         if args.show_downloaded_animes: 
