@@ -41,6 +41,7 @@ class Main:
         parser.add_argument('-sh', '--show_downloaded_animes', help='This will show all downloaded shows and episodes', action='store_true')
         parser.add_argument('-us', '--update_shows', help='This will update all shows in your database that have new episodes.', action='store_true')
         parser.add_argument('-b', '--batch', help='Batch download, download multiple anime.', nargs=1)
+        parser.add_argument('-t', '--threads', help='This will create multiple threads, in other words download multiple episodes at ones.', nargs=1, default=None)
 
         logger = "False"
         args = parser.parse_args()
@@ -104,6 +105,9 @@ class Main:
                     args.exclude = args.exclude[0].split(',')
                 else:
                     args.exclude = args.exclude[0]
+            if type(args.threads) ==list:
+                args.threads = args.threads[0]
+
             Lifter(url=args.input[0].replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                   settings=settings, database=database)
+                   settings=settings, database=database, threads=args.threads)
