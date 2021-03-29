@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -27,6 +27,8 @@ class Lifter(object):
         self.exclude = exclude
         self.newest = newest
         self.settings = settings
+        self.database = database
+        
         if output is None:
             self.output = ""
         else:
@@ -47,6 +49,7 @@ class Lifter(object):
         valid_link, extra = self.is_valid()
         if valid_link:
             # Check to see if we are downloading a single episode or multiple
+            self.database.add_new_anime_to_database(self.url)
             if extra[0] == "anime/":
                 # We are downloading multiple episodes
                 print("Downloading show")
@@ -100,6 +103,16 @@ class Lifter(object):
         hidden_url = self._decode(letters.split(', '), ending_number)
         return self.get_download_url(hidden_url)
 
+    def find_hidden_url(self, url): 
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+
+        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
+        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
+        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
+        hidden_url = self._decode(letters.split(', '), ending_number)
+        return hidden_url
+
     def _decode(self, array, ending):
         iframe = ''
         for item in array:
@@ -111,15 +124,16 @@ class Lifter(object):
         return self.base_url + html.find("iframe")['src']
 
     def download_single(self, url, extra):
-        source_url, backup_url = self.find_download_link(url)
-        if self.resolution == '480' or len(source_url[0]) > 2:
-            download_url = source_url[0][1]
+        download_url = self.find_download_link(url)
+        hidden_url = self.find_hidden_url(url)
+        if self.resolution == '480':
+            download_url = download_url[0][1]
         else:
             download_url = source_url[1][1]
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(download_url=download_url, backup_url=backup_url, output=output, header=self.header,
+        Downloader(logger=self.logger, download_url=download_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
                    show_info=show_info, settings=self.settings)
 
     def download_show(self, url):
@@ -173,6 +187,7 @@ class Lifter(object):
             matching.reverse()
         for item in matching:
             source_url, backup_url = self.find_download_link(item)
+            hidden_url = self.find_hidden_url(item)
             if self.resolution == '480' or len(source_url[0]) > 2:
                 download_url = source_url[0][1]
             else:
@@ -180,7 +195,7 @@ class Lifter(object):
             show_info = self.info_extractor(item)
             output = self.check_output(show_info[0])
 
-            Downloader(download_url=download_url, backup_url=backup_url, output=output, header=self.header,
+            Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
                        show_info=show_info, settings=self.settings)
 
     @staticmethod
