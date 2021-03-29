@@ -26,27 +26,6 @@ Please go check out the wiki as it is indepth on what this script does.
     * [Reporting Issues](#reporting-issues)
     * [Suggesting A Feature](#suggesting-a-feature)
 
-## To-Do
-- [x] Create argument `-n` to download newest show when using the whole show URL using the command below
- - `_main__.py -i https://www.wcostream.com/anime/my-favorite-anime/ -n`
-- [ ] Save all previously downloaded show names and output locations in a text file
-- [ ] Scraper Mode
- - When calling this argument `-s`, it will check all of your previously downloaded shows *(see above)* and see if there is a new episode out
-- If there is, it will begin downloading it to the directory where the previous episode was downloaded
-- [ ] Possibly adding the ability to track if user has all the shows out for that Anime/Cartoon
- - Example.
-   - There are 12 episodes of `My Favorite Anime`
-   - I tell the program where I stored `My Favorite Anime`
-   - The program will reach out to wcostream and find out how many episodes are in `My Favorite Anime`
-   - It will display in a neat fashion as shown below
-   - If I'm missing any I can run the following command to grab the missing files
-   - `__main__.py -i https://www.wcostream.com/anime/another-good-anime/ --fix`
-
-| Show Name  | Completion  |
-| ------------- | ------------ |
-| My Favorite Anime  | 12/12  |
-| !! Another Good Anime  | 10/12 !!  |
-
 ## Dependencies Installation
 This script can run on multiple Operating Systems. But, the script depends on some external binaries or libs.
 
@@ -76,17 +55,12 @@ and then, execute with this :
 
 ## Python Support
 - [ ] Python 2.7 or earlier (Will not support)
-- [x] Python 3.5
-- [x] Python 3.6
-- [x] Python 3.7
-- [x] Python 3.8.1
-- [ ] Python 3.9 __[In-Testing]__
+- [x] Python 3.5 or newer
 
 ## Windows Binary
 It is recommended that windows users use this binary to save both, your head and time from installing all the dependencies. 
 
 Go download this binary and start using the script right off the bat:
-* `Binary (x86)` : [Click Here](https://github.com/EpicUnknown/wco-dl/releases/latest)
 * `Binary (x64)` : [Click Here](https://github.com/EpicUnknown/wco-dl/releases/latest)
 
 
