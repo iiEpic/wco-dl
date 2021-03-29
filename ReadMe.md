@@ -80,6 +80,7 @@ Currently, the script supports these arguments :
 -sh, --show_downloaded_animes          Show all downloaded shows and episodes.
 -us, --update_shows                    Update all shows in your database that have new episodes.
 -b, --batch                            Batch download, download multiple anime [Ex : -b ./file_name (a text file with wcostream.com, to download from).
+-t, --threads                          This will create multiple threads, in other words download multiple episodes at ones [Ex : -t 4 (Number of threads to create).
 ```
 
 ## Usage
