@@ -7,7 +7,7 @@ from requests import session
 from tqdm import tqdm
 
 class Downloader(object):
-    def __init__(self, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings):
+    def __init__(self, logger, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings):
         self.sess = session()
         self.sess = create_scraper(self.sess)
 
@@ -25,6 +25,7 @@ class Downloader(object):
         self.backup_url = backup_url
         self.hidden_url = hidden_url
         self.user_agent = user_agent
+        self.logger = logger
 
         if settings.get_setting('includeShowDesc'):
             self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
@@ -37,7 +38,15 @@ class Downloader(object):
         if (os.path.exists(self.file_path) and settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
             print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
         elif (settings.get_setting('allowToResumeDownloads') and os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0): 
-            self.start_download(download_url, os.path.getsize(self.file_path))
+            already_downloaded_bytes = os.path.getsize(self.file_path)
+            while True:
+                self.start_download(download_url, already_downloaded_bytes)
+                if (os.path.getsize(self.file_path) == already_downloaded_bytes):
+                    print('[wco-dl] - Trying to download using the backup URL...')
+                    self.start_download(backup_url, already_downloaded_bytes)
+                return 
+
+                
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
             while True:
@@ -76,19 +85,29 @@ class Downloader(object):
                     'Range': 'bytes={0}-'.format(resume_bytes),  
                 }
                 dlr = self.sess.get(host_url, stream=True, headers=resume_header)
-                with open(self.file_path, 'ab') as handle:
-                    with tqdm(unint='B', unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
-                        for data in dlr.iter_content(chunk_size=1024):
-                            handle.write(data)
-                            pbar.update(len(data))
+                try:
+                    with open(self.file_path, 'ab') as handle:
+                        with tqdm(unint='B', unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
+                            for data in dlr.iter_content(chunk_size=1024):
+                                handle.write(data)
+                                pbar.update(len(data))
+                except Exception as e:
+                    if (self.logger == 'True'):
+                        print('Error: {}'.format(e), end='\n\n')
+                    return
                 return
             else:
                 dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
-                with open(self.file_path, "wb") as handle:
-                    with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
-                        for data in dlr.iter_content(chunk_size=1024):
-                            handle.write(data)
-                            pbar.update(len(data))
+                try: 
+                    with open(self.file_path, "wb") as handle:
+                        with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                            for data in dlr.iter_content(chunk_size=1024):
+                                handle.write(data)
+                                pbar.update(len(data))
+                except Exception as e:
+                    if (self.logger == 'True'):
+                        print('Error: {}'.format(e), end='\n\n')
+                    return False
 
             if os.path.getsize(self.file_path) == 0:
                 # print("[wco-dl] - Download for {0} did not complete, please try again.\n".format(self.file_name))
