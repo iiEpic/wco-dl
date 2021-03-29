@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, update=False):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -28,6 +28,7 @@ class Lifter(object):
         self.newest = newest
         self.settings = settings
         self.database = database
+        self.update = update
         
         if output is None:
             self.output = ""
@@ -46,7 +47,8 @@ class Lifter(object):
         self.path = os.path.dirname(os.path.realpath(__file__))
 
         # Check if the URL is valid
-        valid_link, extra = self.is_valid()
+        valid_link, extra = self.is_valid(self.url)
+
         if valid_link:
             # Check to see if we are downloading a single episode or multiple
             self.database.add_new_anime_to_database(self.url)
@@ -124,8 +126,9 @@ class Lifter(object):
         return self.base_url + html.find("iframe")['src']
 
     def download_single(self, url, extra):
-        download_url = self.find_download_link(url)
+        download_url, source_url = self.find_download_link(url)
         hidden_url = self.find_hidden_url(url)
+
         if self.resolution == '480':
             download_url = download_url[0][1]
         else:
@@ -133,7 +136,7 @@ class Lifter(object):
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(logger=self.logger, download_url=download_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
+        Downloader(logger=self.logger, download_url=download_url, backup_url=source_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
                    show_info=show_info, settings=self.settings)
 
     def download_show(self, url):
@@ -144,11 +147,15 @@ class Lifter(object):
         for link in soup.findAll('a', {'class': 'sonra'}):
             if link['href'] not in links:
                 links.append(link['href'])
-
+    
         if self.exclude is not None:
             excluded = [i for e in self.exclude for i in links if re.search(e, i)]
             links = [item for item in links if item not in excluded]
+
         season = "season-" + self.season
+
+        if self.update == True:
+            links = links[0:1]
 
         if len(ep_range) == 1:
             ep_range = '{0}-{0}'.format(ep_range)
@@ -216,8 +223,8 @@ class Lifter(object):
             desc = ""
         return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip(), url
 
-    def is_valid(self):
-        website = re.findall('https://(www.)?wcostream.com/(anime/)?([a-zA-Z].+$)?', self.url)
+    def is_valid(self, url):
+        website = re.findall('https://(www.)?wcostream.com/(anime/)?([a-zA-Z].+$)?', url)
         if website:
             if website[0][1] == "anime/":
                 return True, (website[0][1], website[0][2])
