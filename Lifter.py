@@ -250,10 +250,15 @@ class Lifter(object):
             for item in matching:
                 source_url, backup_url = self.find_download_link(item)
                 hidden_url = self.find_hidden_url(item)
-                if self.resolution == '480' or len(source_url[0]) > 2:
-                    download_url = source_url[0][1]
-                else:
-                    download_url = source_url[1][1]
+                try:
+                    if self.resolution == '480' or len(source_url[0]) > 2:
+                        download_url = source_url[0][1]
+                    else:
+                        download_url = source_url[1][1]
+                except Exception as e:
+                    if self.logger == 'True':
+                        print('Error: {0}'.format(e))
+                    pass
                 show_info = self.info_extractor(item)
                 output = self.check_output(show_info[0])
 
