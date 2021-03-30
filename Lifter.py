@@ -135,7 +135,7 @@ class Lifter(object):
             try:
                 download_url = source_url[1][1]
             except Exception:
-                download_url = source_url[0][1] 
+                download_url = download_url[0][1] 
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
