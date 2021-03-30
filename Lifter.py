@@ -132,7 +132,10 @@ class Lifter(object):
         if self.resolution == '480':
             download_url = download_url[0][1]
         else:
-            download_url = source_url[1][1]
+            try:
+                download_url = source_url[1][1]
+            except Exception:
+                download_url = source_url[0][1] 
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
@@ -203,7 +206,10 @@ class Lifter(object):
                     if self.resolution == '480' or len(source_url[0]) > 2:
                         download_url = source_url[0][1]
                     else:
-                        download_url = source_url[1][1]
+                        try:
+                            download_url = source_url[1][1]
+                        except Exception:
+                            download_url = source_url[0][1] 
                     show_info = self.info_extractor(item)
                     output = self.check_output(show_info[0])
 
@@ -253,7 +259,10 @@ class Lifter(object):
                 if self.resolution == '480' or len(source_url[0]) > 2:
                     download_url = source_url[0][1]
                 else:
-                    download_url = source_url[1][1]
+                    try:
+                        download_url = source_url[1][1]
+                    except Exception:
+                        download_url = source_url[0][1] 
                 show_info = self.info_extractor(item)
                 output = self.check_output(show_info[0])
 
