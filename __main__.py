@@ -47,12 +47,14 @@ class Main:
         args = parser.parse_args()
 
         if args.batch:
+            if type(args.threads) == list:
+                args.threads = args.threads[0]
             with open(args.batch[0], 'r') as anime_list:
                 for anime in anime_list:
                     print(anime.replace('\n', ''))
                     Lifter(url=anime.replace('\n', '').replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
                     ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                    settings=settings, database=database)
+                    settings=settings, database=database, threads=args.threads)
             print('Done')
             exit()
 
