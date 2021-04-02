@@ -31,6 +31,7 @@ class Lifter(object):
         self.database = database
         self.update = update
         self.threads = threads
+        self.original_thread = self.threads
         self.quiet = quiet
         
         if output is None:
@@ -227,7 +228,7 @@ class Lifter(object):
                     if (int(self.threads) > len(matching)):
                         print('To many threads, setting threads to deafult amount.')
                         self.threads = 3
-
+                    
                     procs = ProcessParallel(print('Threads started', end='\n\n'))
                     for x in range(int(self.threads)):
                         try:
@@ -235,7 +236,12 @@ class Lifter(object):
                             _, extra = self.is_valid(item)
                             processes.append(self.download_single)
                             processes_url.append(item)
-                            processes_extra.append(extra)
+                            if (extra == ''):
+                                print('Downloading: {} Without multithreading cause of a bug.'.format(url))
+                                self.threads = None
+                                self.download_show(url)
+                            else:
+                                processes_extra.append(extra)
                             count += 1
                         except Exception as e:
                             if self.logger == 'True':
@@ -244,13 +250,14 @@ class Lifter(object):
                     for x in processes:
                         procs.append_process(x, url=processes_url[processes_count], extra=processes_extra[processes_count])
                         processes_count+=1
-
+                    
                     procs.fork_processes()
                     procs.start_all()
                     procs.join_all()
                     processes_url.clear()
                     processes_extra.clear()
                     processes.clear()
+                    self.threads = self.original_thread
                     if (count >= len(matching)):
                         break
         else:
@@ -268,7 +275,9 @@ class Lifter(object):
                 output = self.check_output(show_info[0])
 
                 Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
-                        show_info=show_info, settings=self.setting, quiet=self.quiet)
+                        show_info=show_info, settings=self.settings, quiet=self.quiet)
+            if (self.original_thread != None and self.original_thread != 0): 
+                self.threads = self.original_thread
 
     @staticmethod
     def info_extractor(url):
