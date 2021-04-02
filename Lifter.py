@@ -236,12 +236,7 @@ class Lifter(object):
                             _, extra = self.is_valid(item)
                             processes.append(self.download_single)
                             processes_url.append(item)
-                            if (extra == ''):
-                                print('Downloading: {} Without multithreading cause of a bug.'.format(url))
-                                self.threads = None
-                                self.download_show(url)
-                            else:
-                                processes_extra.append(extra)
+                            processes_extra.append(extra)
                             count += 1
                         except Exception as e:
                             if self.logger == 'True':
@@ -250,7 +245,12 @@ class Lifter(object):
                     for x in processes:
                         procs.append_process(x, url=processes_url[processes_count], extra=processes_extra[processes_count])
                         processes_count+=1
-                    
+
+                    if ('' in processes_extra):
+                        self.threads = None
+                        self.download_show(url)
+                        break
+                        
                     procs.fork_processes()
                     procs.start_all()
                     procs.join_all()
