@@ -42,9 +42,15 @@ class Main:
         parser.add_argument('-us', '--update_shows', help='This will update all shows in your database that have new episodes.', action='store_true')
         parser.add_argument('-b', '--batch', help='Batch download, download multiple anime.', nargs=1)
         parser.add_argument('-t', '--threads', help='This will create multiple threads, in other words download multiple episodes at ones.', nargs=1, default=None)
-
+        parser.add_argument("-q", "--quiet", help="Will not show download progress",
+                            action="store_true")
         logger = "False"
+        quiet = 'False'
+        
         args = parser.parse_args()
+
+        if args.quite:
+            quite = 'True'
 
         if args.batch:
             if type(args.threads) == list:
@@ -54,7 +60,7 @@ class Main:
                     print(anime.replace('\n', ''))
                     Lifter(url=anime.replace('\n', '').replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
                     ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                    settings=settings, database=database, threads=args.threads)
+                    settings=settings, database=database, threads=args.threads, quiet=quiet)
             print('Done')
             exit()
 
@@ -63,7 +69,7 @@ class Main:
             for x in database.return_show_url():
                 Lifter(url=x, resolution=args.highdef, logger=logger, season=args.season,
                 ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                settings=settings, database=database, update=True)
+                settings=settings, database=database, update=True, quiet=quiet)
             print('Done')
             exit()
 
@@ -112,4 +118,4 @@ class Main:
 
             Lifter(url=args.input[0].replace('https://wcostream.com', 'https://www.wcostream.com'), resolution=args.highdef, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
-                   settings=settings, database=database, threads=args.threads)
+                   settings=settings, database=database, threads=args.threads, quiet=quiet)
