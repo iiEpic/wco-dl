@@ -49,8 +49,8 @@ class Main:
         
         args = parser.parse_args()
 
-        if args.quite:
-            quite = 'True'
+        if args.quiet:
+            quiet = 'True'
 
         if args.batch:
             if type(args.threads) == list:
