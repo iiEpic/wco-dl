@@ -77,6 +77,10 @@ Currently, the script supports these arguments :
 -epr,--episoderange                    Selects the range of episodes to download (Default = All) [ Ex : --range 1-10 (This will download first 10 episodes of ALL Seasons!)]
 -x,--exclude                           Specifies what shows not to download [Ex: -x ova,special will make it so no ova or special episodes are downloaded]
 -n,--newest                            Downloads the newest episode of the show given.
+-sh, --show_downloaded_animes          Show all downloaded shows and episodes.
+-us, --update_shows                    Update all shows in your database that have new episodes.
+-b, --batch                            Batch download, download multiple anime [Ex : -b ./file_name (a text file with wcostream.com, to download from).
+-t, --threads                          This will create multiple threads, in other words download multiple episodes at ones [Ex : -t 4 (Number of threads to create).
 ```
 
 ## Usage

@@ -45,8 +45,6 @@ class Downloader(object):
                     print('[wco-dl] - Trying to download using the backup URL...')
                     self.start_download(backup_url, already_downloaded_bytes)
                 return 
-
-                
         else:
             print('[wco-dl] - Downloading {0}'.format(self.file_name))
             while True:
@@ -87,7 +85,7 @@ class Downloader(object):
                 dlr = self.sess.get(host_url, stream=True, headers=resume_header)
                 try:
                     with open(self.file_path, 'ab') as handle:
-                        with tqdm(unint='B', unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
+                        with tqdm(unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
                             for data in dlr.iter_content(chunk_size=1024):
                                 handle.write(data)
                                 pbar.update(len(data))
