@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, update=False, threads=None):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, quiet,update=False, threads=None):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -31,6 +31,7 @@ class Lifter(object):
         self.database = database
         self.update = update
         self.threads = threads
+        self.quiet = quiet
         
         if output is None:
             self.output = ""
@@ -140,7 +141,7 @@ class Lifter(object):
         output = self.check_output(show_info[0])
 
         Downloader(logger=self.logger, download_url=download_url, backup_url=source_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
-                   show_info=show_info, settings=self.settings)
+                   show_info=show_info, settings=self.settings, quiet=self.quiet)
 
     def test(self, i, ii):
         print(i, ii)
@@ -214,7 +215,7 @@ class Lifter(object):
                     output = self.check_output(show_info[0])
 
                     Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
-                            show_info=show_info, settings=self.settings)
+                            show_info=show_info, settings=self.settings, quiet=self.quiet)
             else:
                 count = 0
                 while (True):
@@ -267,7 +268,7 @@ class Lifter(object):
                 output = self.check_output(show_info[0])
 
                 Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
-                        show_info=show_info, settings=self.settings)
+                        show_info=show_info, settings=self.setting, quiet=self.quiet)
 
     @staticmethod
     def info_extractor(url):
