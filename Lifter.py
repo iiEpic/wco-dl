@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, update=False, threads=None):
+    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, quiet,update=False, threads=None):
         # Define our variables
         self.url = url
         self.resolution = resolution
@@ -31,6 +31,8 @@ class Lifter(object):
         self.database = database
         self.update = update
         self.threads = threads
+        self.original_thread = self.threads
+        self.quiet = quiet
         
         if output is None:
             self.output = ""
@@ -140,7 +142,7 @@ class Lifter(object):
         output = self.check_output(show_info[0])
 
         Downloader(logger=self.logger, download_url=download_url, backup_url=source_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
-                   show_info=show_info, settings=self.settings)
+                   show_info=show_info, settings=self.settings, quiet=self.quiet)
 
     def test(self, i, ii):
         print(i, ii)
@@ -214,7 +216,7 @@ class Lifter(object):
                     output = self.check_output(show_info[0])
 
                     Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
-                            show_info=show_info, settings=self.settings)
+                            show_info=show_info, settings=self.settings, quiet=self.quiet)
             else:
                 count = 0
                 while (True):
@@ -226,7 +228,7 @@ class Lifter(object):
                     if (int(self.threads) > len(matching)):
                         print('To many threads, setting threads to deafult amount.')
                         self.threads = 3
-
+                    
                     procs = ProcessParallel(print('Threads started', end='\n\n'))
                     for x in range(int(self.threads)):
                         try:
@@ -244,12 +246,18 @@ class Lifter(object):
                         procs.append_process(x, url=processes_url[processes_count], extra=processes_extra[processes_count])
                         processes_count+=1
 
+                    if ('' in processes_extra):
+                        self.threads = None
+                        self.download_show(url)
+                        break
+                        
                     procs.fork_processes()
                     procs.start_all()
                     procs.join_all()
                     processes_url.clear()
                     processes_extra.clear()
                     processes.clear()
+                    self.threads = self.original_thread
                     if (count >= len(matching)):
                         break
         else:
@@ -267,7 +275,9 @@ class Lifter(object):
                 output = self.check_output(show_info[0])
 
                 Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
-                        show_info=show_info, settings=self.settings)
+                        show_info=show_info, settings=self.settings, quiet=self.quiet)
+            if (self.original_thread != None and self.original_thread != 0): 
+                self.threads = self.original_thread
 
     @staticmethod
     def info_extractor(url):

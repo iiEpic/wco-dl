@@ -7,7 +7,7 @@ from requests import session
 from tqdm import tqdm
 
 class Downloader(object):
-    def __init__(self, logger, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings):
+    def __init__(self, logger, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings, quiet):
         self.sess = session()
         self.sess = create_scraper(self.sess)
 
@@ -26,6 +26,7 @@ class Downloader(object):
         self.hidden_url = hidden_url
         self.user_agent = user_agent
         self.logger = logger
+        self.quiet = quiet
 
         if settings.get_setting('includeShowDesc'):
             self.file_name = settings.get_setting('saveFormat').format(show=self.show_name, season=self.season,
@@ -85,10 +86,14 @@ class Downloader(object):
                 dlr = self.sess.get(host_url, stream=True, headers=resume_header)
                 try:
                     with open(self.file_path, 'ab') as handle:
-                        with tqdm(unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
+                        if (self.quiet == 'False'):
+                            with tqdm(unit_scale=1024, miniters=1, desc='Downloading', initial=int(resume_bytes), total=int(dlr.headers['content-length'], 0)) as pbar:
+                                for data in dlr.iter_content(chunk_size=1024):
+                                    handle.write(data)
+                                    pbar.update(len(data))
+                        else:
                             for data in dlr.iter_content(chunk_size=1024):
                                 handle.write(data)
-                                pbar.update(len(data))
                 except Exception as e:
                     if (self.logger == 'True'):
                         print('Error: {}'.format(e), end='\n\n')
@@ -98,10 +103,14 @@ class Downloader(object):
                 dlr = self.sess.get(url, stream=True, headers=self.header)  # Downloading the content using python.
                 try: 
                     with open(self.file_path, "wb") as handle:
-                        with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                        if (self.quiet == 'False'):
+                            with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading", total=int(dlr.headers['content-length'], 0)) as pbar:
+                                for data in dlr.iter_content(chunk_size=1024):
+                                    handle.write(data)
+                                    pbar.update(len(data))
+                        else:
                             for data in dlr.iter_content(chunk_size=1024):
                                 handle.write(data)
-                                pbar.update(len(data))
                 except Exception as e:
                     if (self.logger == 'True'):
                         print('Error: {}'.format(e), end='\n\n')
