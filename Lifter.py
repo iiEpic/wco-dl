@@ -100,7 +100,7 @@ class Lifter(object):
         return response
 
     def find_download_link(self, url):
-        page = requests.get(url)
+        page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
         script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
         letters = script_url[script_url.find("[") + 1:script_url.find("]")]
@@ -109,7 +109,7 @@ class Lifter(object):
         return self.get_download_url(hidden_url)
 
     def find_hidden_url(self, url): 
-        page = requests.get(url)
+        page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
         script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
@@ -126,7 +126,7 @@ class Lifter(object):
             # print(chr(int(numbers) - ending))
             iframe += chr(int(numbers) - ending)
         html = BeautifulSoup(iframe, 'html.parser')
-        return self.base_url + html.find("iframe")['src']
+        return html.find("iframe")['src']
 
     def download_single(self, url, extra):
         download_url, source_url = self.find_download_link(url)
@@ -148,7 +148,7 @@ class Lifter(object):
         print(i, ii)
 
     def download_show(self, url):
-        page = requests.get(url)
+        page = self.request_c(url)
         soup = BeautifulSoup(page.content, 'html.parser')
         ep_range = self.ep_range
         links = []
@@ -306,13 +306,13 @@ class Lifter(object):
         return False, '[wco-dl] Not correct wcostream website.'
 
     def get_download_url(self, embed_url):
-        page = self.request_c(embed_url)
+        page = requests.get(embed_url, headers=self.header)
         html = page.text
 
         # Find the stream URLs.
         if 'getvid?evid' in html:
             # Query-style stream getting.
-            source_url = re.search(r'get\("(.*?)"', html, re.DOTALL).group(1)
+            source_url = re.search(r'getJSON\("(.*?)"', html, re.DOTALL).group(1)
 
             page2 = self.request_c(
                 self.base_url + source_url,
