@@ -100,33 +100,32 @@ class Lifter(object):
         return response
 
     def find_download_link(self, url):
-        page = self.request_c(url)
-        soup = BeautifulSoup(page.text, 'html.parser')
-        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
-        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
-        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
-        hidden_url = self._decode(letters.split(', '), ending_number)
-        return self.get_download_url(hidden_url)
+        return self.get_download_url(self.find_hidden_url(url))
 
-    def find_hidden_url(self, url): 
+    def find_hidden_url(self, url):
         page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
-        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
-        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
-        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
-        hidden_url = self._decode(letters.split(', '), ending_number)
-        return hidden_url
+        iframe_encoded = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
+        tag = re.search("^<([a-zA-Z]*)", iframe_encoded).group(1)
+        if tag == 'script':
+            iframe_decoded = self._decode_iframe(iframe_encoded)
+        elif tag == 'iframe':
+            iframe_decoded = iframe_encoded
+        else:
+            raise Exception(f"Found unexpected element when searching for the iframe with tag='{tag}'")
+        iframe = BeautifulSoup(iframe_decoded, 'html.parser').find('iframe')
+        return iframe['src']
 
-    def _decode(self, array, ending):
+    def _decode_iframe(self, encoded_iframe):
+        array = encoded_iframe[encoded_iframe.find("[") + 1:encoded_iframe.find("]")].split(', ')
+        magic_number = int(re.search(' - ([0-9]+)', encoded_iframe).group(1))
         iframe = ''
         for item in array:
             decoded = base64.b64decode(item).decode('utf8')
             numbers = re.sub('[^0-9]+', '', decoded)
-            # print(chr(int(numbers) - ending))
-            iframe += chr(int(numbers) - ending)
-        html = BeautifulSoup(iframe, 'html.parser')
-        return html.find("iframe")['src']
+            iframe += chr(int(numbers) - magic_number)
+        return iframe
 
     def download_single(self, url, extra):
         download_url, source_url = self.find_download_link(url)
