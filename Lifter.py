@@ -181,15 +181,15 @@ class Lifter(object):
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range[0]), int(ep_range[1]) + 1)]
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s or season in s]
+                matching = [s for s in links if 'season' not in s or f"{season}-" in s]
             else:
-                matching = [s for s in links if season in s]
+                matching = [s for s in links if f"{season}-" in s]
             matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s).group(0)]
         elif season != "season-All":
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s or season in s]
+                matching = [s for s in links if 'season' not in s or f"{season}-" in s]
             else:
-                matching = [s for s in links if season in s]
+                matching = [s for s in links if f"{season}-" in s]
         elif ep_range != 'All':
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range[0]), int(ep_range[1]) + 1)]
