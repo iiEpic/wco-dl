@@ -80,7 +80,7 @@ class Downloader(object):
                     'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
                     'Accept-Language': 'en-US,en;q=0.5',                                                                                                                      
                     'Connection': 'keep-alive',
-                    'Referer': self.hidden_url.replace('https://wcostream.net', 'https://www.wcostream.net'),
+                    'Referer': self.hidden_url.replace('https://wcostream.org', 'https://www.wcostream.org'),
                     'Range': 'bytes={0}-'.format(resume_bytes),  
                 }
                 dlr = self.sess.get(host_url, stream=True, headers=resume_header)
