@@ -106,15 +106,11 @@ class Lifter(object):
         page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
-        iframe_encoded = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
-        tag = re.search("^<([a-zA-Z]*)", iframe_encoded).group(1)
-        if tag == 'script':
-            iframe_decoded = self._decode_iframe(iframe_encoded)
-        elif tag == 'iframe':
-            iframe_decoded = iframe_encoded
-        else:
-            raise Exception(f"Found unexpected element when searching for the iframe with tag='{tag}'")
-        iframe = BeautifulSoup(iframe_decoded, 'html.parser').find('iframe')
+        iframe = soup.find("iframe", {"id": "frameNewcizgifilmuploads0"})
+        if iframe is None:
+            iframe = soup.find("iframe")
+        if iframe is None:
+            raise Exception("Unable to locate the iframe element")
         return iframe['src']
 
     def _decode_iframe(self, encoded_iframe):
