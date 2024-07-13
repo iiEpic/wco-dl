@@ -21,7 +21,7 @@ class Main:
             if (__version__ != r):
                 print('Newer version available, on https://github.com/EpicUnknown/wco-dl', end='\n\n')
 
-        parser = argparse.ArgumentParser(description='wco-dl downloads shows from wcostream.org')
+        parser = argparse.ArgumentParser(description='wco-dl downloads shows from wcostream.tv')
 
         parser.add_argument('--version', action='store_true', help='Shows version and exits.')
 
@@ -58,7 +58,7 @@ class Main:
             with open(args.batch[0], 'r') as anime_list:
                 for anime in anime_list:
                     print(anime.replace('\n', ''))
-                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.org', 'https://www.wcostream.org'), resolution=args.highdef, logger=logger, season=args.season,
+                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.highdef, logger=logger, season=args.season,
                     ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                     settings=settings, database=database, threads=args.threads, quiet=quiet)
             print('Done')
@@ -116,6 +116,6 @@ class Main:
             if type(args.threads) ==list:
                 args.threads = args.threads[0]
 
-            Lifter(url=args.input[0].replace('https://wcostream.org', 'https://www.wcostream.org'), resolution=args.highdef, logger=logger, season=args.season,
+            Lifter(url=args.input[0].replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.highdef, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                    settings=settings, database=database, threads=args.threads, quiet=quiet)

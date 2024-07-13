@@ -47,7 +47,7 @@ class Lifter(object):
         self.header = {
             'User-Agent': self.user_agent, 'Accept': '*/*', 'Referer': url, 'X-Requested-With': 'XMLHttpRequest'
         }
-        self.base_url = "https://wcostream.org"
+        self.base_url = "https://wcostream.tv"
         self.path = os.path.dirname(os.path.realpath(__file__))
 
         # Check if the URL is valid
@@ -280,7 +280,7 @@ class Lifter(object):
 
     @staticmethod
     def info_extractor(url):
-        url = re.sub('https://www.wcostream.org/', '', url)
+        url = re.sub('https://www.wcostream.tv/', '', url)
         try:
             if "season" in url:
                 show_name, season, episode, desc = re.findall(r'([a-zA-Z0-9].+)\s(season\s\d+\s?)(episode\s\d+\s)?(.+)',
@@ -297,7 +297,7 @@ class Lifter(object):
         return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip(), url
 
     def is_valid(self, url):
-        website = re.findall('https://(www.)?wcostream.org/(anime/)?([a-zA-Z].+$)?', url)
+        website = re.findall('https://(www.)?wcostream.tv/(anime/)?([a-zA-Z].+$)?', url)
         if website:
             if website[0][1] == "anime/":
                 return True, (website[0][1], website[0][2])
