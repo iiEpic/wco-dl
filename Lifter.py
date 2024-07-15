@@ -47,7 +47,7 @@ class Lifter(object):
         self.header = {
             'User-Agent': self.user_agent, 'Accept': '*/*', 'Referer': url, 'X-Requested-With': 'XMLHttpRequest'
         }
-        self.base_url = "https://wcostream.com"
+        self.base_url = "https://wcostream.tv"
         self.path = os.path.dirname(os.path.realpath(__file__))
 
         # Check if the URL is valid
@@ -100,33 +100,28 @@ class Lifter(object):
         return response
 
     def find_download_link(self, url):
-        page = requests.get(url)
-        soup = BeautifulSoup(page.text, 'html.parser')
-        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
-        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
-        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
-        hidden_url = self._decode(letters.split(', '), ending_number)
-        return self.get_download_url(hidden_url)
+        return self.get_download_url(self.find_hidden_url(url))
 
-    def find_hidden_url(self, url): 
-        page = requests.get(url)
+    def find_hidden_url(self, url):
+        page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
 
-        script_url = repr(soup.find("meta", {"itemprop": "embedURL"}).next_element.next_element)
-        letters = script_url[script_url.find("[") + 1:script_url.find("]")]
-        ending_number = int(re.search(' - ([0-9]+)', script_url).group(1))
-        hidden_url = self._decode(letters.split(', '), ending_number)
-        return hidden_url
+        iframe = soup.find("iframe", {"id": "frameNewcizgifilmuploads0"})
+        if iframe is None:
+            iframe = soup.find("iframe")
+        if iframe is None:
+            raise Exception("Unable to locate the iframe element")
+        return iframe['src']
 
-    def _decode(self, array, ending):
+    def _decode_iframe(self, encoded_iframe):
+        array = encoded_iframe[encoded_iframe.find("[") + 1:encoded_iframe.find("]")].split(', ')
+        magic_number = int(re.search(' - ([0-9]+)', encoded_iframe).group(1))
         iframe = ''
         for item in array:
             decoded = base64.b64decode(item).decode('utf8')
             numbers = re.sub('[^0-9]+', '', decoded)
-            # print(chr(int(numbers) - ending))
-            iframe += chr(int(numbers) - ending)
-        html = BeautifulSoup(iframe, 'html.parser')
-        return self.base_url + html.find("iframe")['src']
+            iframe += chr(int(numbers) - magic_number)
+        return iframe
 
     def download_single(self, url, extra):
         download_url, source_url = self.find_download_link(url)
@@ -148,7 +143,7 @@ class Lifter(object):
         print(i, ii)
 
     def download_show(self, url):
-        page = requests.get(url)
+        page = self.request_c(url)
         soup = BeautifulSoup(page.content, 'html.parser')
         ep_range = self.ep_range
         links = []
@@ -182,15 +177,15 @@ class Lifter(object):
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range[0]), int(ep_range[1]) + 1)]
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s or season in s]
+                matching = [s for s in links if 'season' not in s or f"{season}-" in s]
             else:
-                matching = [s for s in links if season in s]
+                matching = [s for s in links if f"{season}-" in s]
             matching = [s for s in matching for i in episodes if i == re.search(r'episode-[0-9]+', s).group(0)]
         elif season != "season-All":
             if season == 'season-1':
-                matching = [s for s in links if 'season' not in s or season in s]
+                matching = [s for s in links if 'season' not in s or f"{season}-" in s]
             else:
-                matching = [s for s in links if season in s]
+                matching = [s for s in links if f"{season}-" in s]
         elif ep_range != 'All':
             episodes = ["episode-{0}".format(n) for n in
                         range(int(ep_range[0]), int(ep_range[1]) + 1)]
@@ -281,7 +276,7 @@ class Lifter(object):
 
     @staticmethod
     def info_extractor(url):
-        url = re.sub('https://www.wcostream.com/', '', url)
+        url = re.sub('https://www.wcostream.tv/', '', url)
         try:
             if "season" in url:
                 show_name, season, episode, desc = re.findall(r'([a-zA-Z0-9].+)\s(season\s\d+\s?)(episode\s\d+\s)?(.+)',
@@ -298,7 +293,7 @@ class Lifter(object):
         return show_name.title().strip(), season.title().strip(), episode.title().strip(), desc.title().strip(), url
 
     def is_valid(self, url):
-        website = re.findall('https://(www.)?wcostream.com/(anime/)?([a-zA-Z].+$)?', url)
+        website = re.findall('https://(www.)?wcostream.tv/(anime/)?([a-zA-Z].+$)?', url)
         if website:
             if website[0][1] == "anime/":
                 return True, (website[0][1], website[0][2])
@@ -306,13 +301,13 @@ class Lifter(object):
         return False, '[wco-dl] Not correct wcostream website.'
 
     def get_download_url(self, embed_url):
-        page = self.request_c(embed_url)
+        page = requests.get(embed_url, headers=self.header)
         html = page.text
 
         # Find the stream URLs.
         if 'getvid?evid' in html:
             # Query-style stream getting.
-            source_url = re.search(r'get\("(.*?)"', html, re.DOTALL).group(1)
+            source_url = re.search(r'getJSON\("(.*?)"', html, re.DOTALL).group(1)
 
             page2 = self.request_c(
                 self.base_url + source_url,
