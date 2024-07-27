@@ -27,7 +27,7 @@ class Main:
 
         required_args = parser.add_argument_group('Required Arguments :')
         required_args.add_argument('-i', '--input', nargs=1, help='Inputs the URL to show.')
-        parser.add_argument('-hd', '--highdef', help='If you wish to get 720p', action="store_true")
+        parser.add_argument('-r', '--resolution', choices=['fast', '480p', '720p', '1080p', 'best'], default='best', help='desired download resolution [default: %(default)s]')
         parser.add_argument('-epr', '--episoderange', nargs=1, help='Specifies the range of episodes to download.',
                             default='All')
         parser.add_argument('-se', '--season', nargs=1, help='Specifies the season to download.',
@@ -58,7 +58,7 @@ class Main:
             with open(args.batch[0], 'r') as anime_list:
                 for anime in anime_list:
                     print(anime.replace('\n', ''))
-                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.highdef, logger=logger, season=args.season,
+                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, logger=logger, season=args.season,
                     ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                     settings=settings, database=database, threads=args.threads, quiet=quiet)
             print('Done')
@@ -67,7 +67,7 @@ class Main:
         if args.update_shows: 
             print("Updating all shows, this will take a while.")
             for x in database.return_show_url():
-                Lifter(url=x, resolution=args.highdef, logger=logger, season=args.season,
+                Lifter(url=x, resolution=args.resolution, logger=logger, season=args.season,
                 ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                 settings=settings, database=database, update=True, quiet=quiet)
             print('Done')
@@ -90,11 +90,6 @@ class Main:
             print("Current Version : {0}".format(__version__))
             exit()
 
-        if args.highdef:
-            args.highdef = '720'
-        else:
-            args.highdef = '480'
-        
         if args.input is None:
             print("Please enter the required argument. Run __main__.py --help")
             exit()
@@ -116,6 +111,6 @@ class Main:
             if type(args.threads) ==list:
                 args.threads = args.threads[0]
 
-            Lifter(url=args.input[0].replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.highdef, logger=logger, season=args.season,
+            Lifter(url=args.input[0].replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                    settings=settings, database=database, threads=args.threads, quiet=quiet)

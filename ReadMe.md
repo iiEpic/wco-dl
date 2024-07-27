@@ -70,7 +70,7 @@ Currently, the script supports these arguments :
 -h, --help                             Prints the basic help menu of the script and exits.
 -i,--input                             Defines the input link to the show. [REQUIRED]
 -V,--version                           Prints the VERSION and exits.
--hd,--highdef                          Selects 720p version if available (Only 480 and 720 are offered on WCO Stream)
+-r,--resolution                        Desired download resolution [default: best]
 -v,--verbose                           Starts Verbose Logging for detailed information.
 -o,--ouput                             Specifies download location
 -se,--season                           Selects the season to download of a show (Default = All)

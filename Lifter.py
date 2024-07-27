@@ -18,6 +18,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Lifter(object):
 
+    class SourceUrl(object):
+
+        def __init__(self, label, url):
+            self.label = label
+            self.url = url
+
     def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, quiet,update=False, threads=None):
         # Define our variables
         self.url = url
@@ -99,9 +105,6 @@ class Lifter(object):
 
         return response
 
-    def find_download_link(self, url):
-        return self.get_download_url(self.find_hidden_url(url))
-
     def find_hidden_url(self, url):
         page = self.request_c(url)
         soup = BeautifulSoup(page.text, 'html.parser')
@@ -123,20 +126,27 @@ class Lifter(object):
             iframe += chr(int(numbers) - magic_number)
         return iframe
 
-    def download_single(self, url, extra):
-        download_url, source_url = self.find_download_link(url)
+    def select_closest_resolution_source(self, source_urls):
+        if self.resolution == 'best':
+            return source_urls[-1].url
+        if self.resolution == 'fast':
+            return source_urls[0].url
+        for source_url in source_urls:
+            if source_url.label == self.resolution:
+                return source_url.url
+        return source_urls[-1].url
+
+    def get_player_urls(self, url):
         hidden_url = self.find_hidden_url(url)
-        if self.resolution == '480':
-            download_url = download_url[0][1]
-        else:
-            try:
-                download_url = source_url[1][1]
-            except Exception:
-                download_url = download_url[0][1] 
+        source_urls, backup_url = self.get_download_urls(hidden_url)
+        return self.select_closest_resolution_source(source_urls), backup_url, hidden_url
+
+    def download_single(self, url, extra):
+        download_url, backup_url, hidden_url = self.get_player_urls(url)
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(logger=self.logger, download_url=download_url, backup_url=source_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
+        Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
                    show_info=show_info, settings=self.settings, quiet=self.quiet)
 
     def test(self, i, ii):
@@ -198,15 +208,7 @@ class Lifter(object):
         if (self.threads != None and self.threads != 0):
             if (len(matching) == 1):
                 for item in matching:
-                    source_url, backup_url = self.find_download_link(item)
-                    hidden_url = self.find_hidden_url(item)
-                    if self.resolution == '480' or len(source_url[0]) > 2:
-                        download_url = source_url[0][1]
-                    else:
-                        try:
-                            download_url = source_url[1][1]
-                        except Exception:
-                            download_url = source_url[0][1] 
+                    download_url, backup_url, hidden_url = self.get_player_urls(item)
                     show_info = self.info_extractor(item)
                     output = self.check_output(show_info[0])
 
@@ -257,15 +259,7 @@ class Lifter(object):
                         break
         else:
             for item in matching:
-                source_url, backup_url = self.find_download_link(item)
-                hidden_url = self.find_hidden_url(item)
-                if self.resolution == '480' or len(source_url[0]) > 2:
-                    download_url = source_url[0][1]
-                else:
-                    try:
-                        download_url = source_url[1][1]
-                    except Exception:
-                        download_url = source_url[0][1] 
+                download_url, backup_url, hidden_url = self.get_player_urls(item)
                 show_info = self.info_extractor(item)
                 output = self.check_output(show_info[0])
 
@@ -300,7 +294,7 @@ class Lifter(object):
             return True, website[0][2]
         return False, '[wco-dl] Not correct wcostream website.'
 
-    def get_download_url(self, embed_url):
+    def get_download_urls(self, embed_url):
         page = requests.get(embed_url, headers=self.header)
         html = page.text
 
@@ -324,11 +318,14 @@ class Lifter(object):
             source_urls = []
             sd_token = json_data.get('enc', '')
             hd_token = json_data.get('hd', '')
+            fhd_token = json_data.get('fhd', '')
             source_base_url = json_data.get('server', '') + '/getvid?evid='
             if sd_token:
-                source_urls.append(('480 (SD)', source_base_url + sd_token))  # Order the items as (LABEL, URL).
+                source_urls.append(self.SourceUrl(label='480p', url=source_base_url + sd_token))  # Order the items as (LABEL, URL).
             if hd_token:
-                source_urls.append(('720 (HD)', source_base_url + hd_token))
+                source_urls.append(self.SourceUrl(label='720p', url=source_base_url + hd_token))
+            if fhd_token:
+                source_urls.append(self.SourceUrl(label='1080p', url=source_base_url + fhd_token))
             # Use the same backup stream method as the source: cdn domain + SD stream.
             backup_url = json_data.get('cdn', '') + '/getvid?evid=' + (sd_token or hd_token)
         else:
@@ -337,7 +334,7 @@ class Lifter(object):
             stream_pattern = re.compile(r'\{\s*?file:\s*?"(.*?)"(?:,\s*?label:\s*?"(.*?)")?')
             source_urls = [
                 # Order the items as (LABEL (or empty string), URL).
-                (sourceMatch.group(2), sourceMatch.group(1))
+                self.SourceUrl(label=sourceMatch.group(2), url=sourceMatch.group(1))
                 for sourceMatch in stream_pattern.finditer(sources_block)
             ]
             # Use the backup link in the 'onError' handler of the 'jw' player.
