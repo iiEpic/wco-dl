@@ -24,10 +24,11 @@ class Lifter(object):
             self.label = label
             self.url = url
 
-    def __init__(self, url, resolution, logger, season, ep_range, exclude, output, newest, settings, database, quiet,update=False, threads=None):
+    def __init__(self, url, resolution, session, logger, season, ep_range, exclude, output, newest, settings, database, quiet,update=False, threads=None):
         # Define our variables
         self.url = url
         self.resolution = resolution
+        self.session = session
         self.logger = logger
         self.season = season
         self.ep_range = ep_range
@@ -146,7 +147,7 @@ class Lifter(object):
         show_info = self.info_extractor(extra)
         output = self.check_output(show_info[0])
 
-        Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
+        Downloader(session=self.session, logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url,output=output, header=self.header, user_agent=self.user_agent,
                    show_info=show_info, settings=self.settings, quiet=self.quiet)
 
     def test(self, i, ii):
@@ -212,7 +213,7 @@ class Lifter(object):
                     show_info = self.info_extractor(item)
                     output = self.check_output(show_info[0])
 
-                    Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
+                    Downloader(session=self.session, logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
                             show_info=show_info, settings=self.settings, quiet=self.quiet)
             else:
                 count = 0
@@ -263,7 +264,7 @@ class Lifter(object):
                 show_info = self.info_extractor(item)
                 output = self.check_output(show_info[0])
 
-                Downloader(logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
+                Downloader(session=self.session, logger=self.logger, download_url=download_url, backup_url=backup_url, hidden_url=hidden_url ,output=output, header=self.header, user_agent=self.user_agent,
                         show_info=show_info, settings=self.settings, quiet=self.quiet)
             if (self.original_thread != None and self.original_thread != 0): 
                 self.threads = self.original_thread

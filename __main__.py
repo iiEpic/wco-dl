@@ -9,6 +9,7 @@ from Lifter import *
 from version import __version__
 from Settings import Settings
 from SaveDownloads import SaveDownloadToFile
+from requests import session
 
 class Main:
     if __name__ == '__main__':
@@ -49,6 +50,8 @@ class Main:
         
         args = parser.parse_args()
 
+        session = session()
+
         if args.quiet:
             quiet = 'True'
 
@@ -58,7 +61,7 @@ class Main:
             with open(args.batch[0], 'r') as anime_list:
                 for anime in anime_list:
                     print(anime.replace('\n', ''))
-                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, logger=logger, season=args.season,
+                    Lifter(url=anime.replace('\n', '').replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, session=session, logger=logger, season=args.season,
                     ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                     settings=settings, database=database, threads=args.threads, quiet=quiet)
             print('Done')
@@ -67,7 +70,7 @@ class Main:
         if args.update_shows: 
             print("Updating all shows, this will take a while.")
             for x in database.return_show_url():
-                Lifter(url=x, resolution=args.resolution, logger=logger, season=args.season,
+                Lifter(url=x, resolution=args.resolution, session=session, logger=logger, season=args.season,
                 ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                 settings=settings, database=database, update=True, quiet=quiet)
             print('Done')
@@ -111,6 +114,6 @@ class Main:
             if type(args.threads) ==list:
                 args.threads = args.threads[0]
 
-            Lifter(url=args.input[0].replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, logger=logger, season=args.season,
+            Lifter(url=args.input[0].replace('https://wcostream.tv', 'https://www.wcostream.tv'), resolution=args.resolution, session=session, logger=logger, season=args.season,
                    ep_range=args.episoderange, exclude=args.exclude, output=args.output, newest=args.newest,
                    settings=settings, database=database, threads=args.threads, quiet=quiet)
