@@ -3,12 +3,11 @@
 import os
 import re
 from cfscrape import create_scraper
-from requests import session
 from tqdm import tqdm
 
 class Downloader(object):
-    def __init__(self, logger, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings, quiet):
-        self.sess = session()
+    def __init__(self, session, logger, download_url, backup_url, hidden_url, output, header, user_agent, show_info, settings, quiet):
+        self.sess = session
         self.sess = create_scraper(self.sess)
 
         self.show_name = show_info[0]
@@ -36,7 +35,7 @@ class Downloader(object):
                                                                        episode=self.episode)
         self.file_path = self.output + os.sep + "{0}.mp4".format(self.file_name)
 
-        if (os.path.exists(self.file_path) and settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)) :
+        if (settings.get_setting('checkIfFileIsAlreadyDownloaded') and self.check_if_downloaded(download_url)):
             print('[wco-dl] - {0} skipped, already downloaded.'.format(self.file_name))
         elif (settings.get_setting('allowToResumeDownloads') and os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0): 
             already_downloaded_bytes = os.path.getsize(self.file_path)
@@ -65,7 +64,7 @@ class Downloader(object):
 
     def check_if_downloaded(self, url):
         print('[wco-dl] - Checking if video is already downloaded, this may take some time, you can turn this off in your settings.')
-        if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header).headers["content-length"])):
+        if (os.path.exists(self.file_path) and int(os.path.getsize(self.file_path)) == int(self.sess.get(url, headers=self.header, stream=True).headers["content-length"])):
             return True
         return False
 
@@ -73,7 +72,7 @@ class Downloader(object):
         while True:
             if (resume_bytes != None and os.path.exists(self.file_path) and os.path.getsize(self.file_path) != 0):
                 print('Resuming download you can turn this off in your settings.')
-                host_url = self.sess.get(url).url
+                host_url = self.sess.get(url, stream=True).url
                 resume_header = {
                     'Host': host_url.split("//")[-1].split("/")[0].split('?')[0],
                     'User-Agent': self.user_agent,
