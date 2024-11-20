@@ -9,6 +9,7 @@ import pydantic
 import requests
 import tqdm
 import bs4
+import pick
 
 class Config_Model(pydantic.BaseModel):
     version: str = '0.0.1'
@@ -39,6 +40,16 @@ class Network:
 
     def get(self, url: str, headers: dict=None) -> tuple:
         response: str = self.raw_get(url, headers).text
+        return response
+
+    def raw_post(self, url: str, headers: dict=None, data: dict=None) -> requests.models.Response:
+        response: requests.model.Response = self.session.post(url, headers=headers, data=data) 
+        if (response.ok):
+            return response
+        raise requests.exceptions.HTTPError('Response was not ok')
+
+    def post(self, url: str, headers: dict=None, data: dict=None) -> tuple:
+        response: str = self.raw_post(url, headers, data).text
         return response
 
     def download_file(self, label: str, url: str, headers: dict, filename: str, folder: str, resume_download: bool) -> str:
@@ -132,6 +143,18 @@ class Scraper:
             backup_url = backup_match.group(1) if backup_match else ''
         return source_urls, backup_url
 
+    def search(self, query: str) -> list[str]:
+        headers: dict = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36',}
+        response: str = self.network_manager.post(f'https://www.wcostream.tv/search', headers, {'catara': query, 'konuara': 'series'})
+        soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response, 'html.parser')
+        divs = soup.findAll('div', attrs={'class': 'left', 'id': 'blog'}) 
+        results = []
+        for div in divs:
+            links = div.findAll('a')
+            for a in links:
+                results.append(a['href'])
+        return results
+
     def info_extractor(self, url):
         url = re.sub('https://www.wcostream.tv/', '', url)
         try:
@@ -178,10 +201,12 @@ def download_episode(url: str, network_manager: Network, scraper_manager: Scrape
 
 def args_parser():
     parser = argparse.ArgumentParser(description='Download wcostream content')
-    parser.add_argument('-u','--urls', help='Urls to download', nargs='+', required=True)
+    parser.add_argument('-u','--urls', help='Urls to download', nargs='+', required=False)
+    parser.add_argument('-l','--lookup', help='Search', type=str, required=False)
     parser.add_argument('-t','--threads', help='Threads to use', type=int, default=1, required=False)
     parser.add_argument('-s','--season', help='Threads to use', type=int, default=0, required=False)
     parser.add_argument('-r','--range', help='Ranges to download ex: 1, 1-10, 1-', type=str, default='all', required=False)
+    parser.add_argument('-v','--version', help='Show version', action='store_true', required=False)
     args = parser.parse_args()
     return args
 
@@ -190,6 +215,19 @@ def main():
     network_manager: Network = Network()
     scraper_manager: Scraper = Scraper() 
     config: Config_Model = scraper_manager.configuration
+    if (args.version):
+        print(f'Version: {config.version}')
+        return
+    if (args.lookup):
+        results = list(set(scraper_manager.search(args.lookup)))
+        results.sort()
+        title = 'Please choose (press SPACE to mark, ENTER to continue): '
+        options = [result.replace('/anime/','').replace('-', ' ') for result in results]
+        selected = pick.pick(options, title, multiselect=True, min_selection_count=1)
+        if (args.urls is None):
+            args.urls = []
+        for item in selected:
+            args.urls.append(f"https://www.wcostream.net/anime/{item[0].replace(' ', '-')}")
     for url in args.urls:
         if ('/anime/' in url):
             result =[]

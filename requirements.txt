@@ -2,3 +2,4 @@ pydantic
 requests
 tqdm
 beautifulsoup4
+pick

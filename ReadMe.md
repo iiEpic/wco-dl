@@ -68,11 +68,13 @@ Go download this binary and start using the script right off the bat:
 Currently, the script supports these arguments :
 ```
 -h, --help                             Prints the basic help menu of the script and exits.
--u,--urls                              Defines the input links to the shows. [REQUIRED]
+-u,--urls                              Defines the input links to the shows.
+-l,--lookup                            Search for any show by nameDefines the input links to the shows.
 -V,--version                           Prints the VERSION and exits.
 -s,--season                            Selects the season to download of a show (Default = All)
 -r,--range                             Selects the range of episodes to download (Default = All) [ Ex : --range 1 or 1-10 or 1-]
 -t, --threads                          This will create multiple threads, in other words download multiple episodes at ones [Ex : -t 4 (Number of threads to create).
+-v, --version                          Show app version
 ```
 
 ## Usage
@@ -107,6 +109,10 @@ After you've saved this script in a directory/folder, you need to open `command 
 
 ### Example Commands
 `main.py -u "<Single Episode URL>"` - Download all every season!
+
+`main.py -l "<Show name>"` - Search for and download any show
+
+`main.py -s 1 -l "<Show name>"` - Search for and download any show and download only the first season
 
 `main.py -u "<Whole Show URL>" -r 1-10` - Download Episodes 1-10
 
