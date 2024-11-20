@@ -1,0 +1,11 @@
+
+*.pyc
+*.spec
+*.exe
+failed.txt
+settings.json
+/Output
+/dist
+/build
+/.idea
+/__pycache__
