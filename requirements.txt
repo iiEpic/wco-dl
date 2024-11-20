@@ -1,4 +1,4 @@
-argparse
-cfscrape
-bs4
+pydantic
+requests
 tqdm
+beautifulsoup4

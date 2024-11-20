@@ -11,7 +11,7 @@ Please go check out the wiki as it is indepth on what this script does.
 ## Table of Contents
 
 * [To-Do](#to-do)
-* [Dependencies Installation](#dependencies-installation)
+* [Dependencies Installation](#dependencies-unstallation)
 * [Installation](#installation)
 * [Python Support](#python-support)
 * [Windows Binary](#windows-binary)
@@ -22,8 +22,8 @@ Please go check out the wiki as it is indepth on what this script does.
     * [Example Commands](#example-commands)
     * [Example URLs](#example-urls)
 * [Features](#features)
-* [Opening An Issue/Requesting A Site](#opening-an-issuerequesting-a-site)
-    * [Reporting Issues](#reporting-issues)
+* [Opening An Issue/Requesting A Site](#opening-an-ussuerequesting-a-site)
+    * [Reporting Issues](#reporting-ussues)
     * [Suggesting A Feature](#suggesting-a-feature)
 
 ## Dependencies Installation
@@ -47,11 +47,11 @@ The instructions for all the OS would remain same. Download this reposititory an
 
 **Linux/Debian** users make sure that this script is executable.Just run this command, if you run into problem(s) :
 
-`chmod +x __main__.py`
+`chmod +x main.py`
 
 and then, execute with this :
 
-`./__main__.py`
+`./main.py`
 
 ## Python Support
 - [ ] Python 2.7 or earlier (Will not support)
@@ -68,18 +68,10 @@ Go download this binary and start using the script right off the bat:
 Currently, the script supports these arguments :
 ```
 -h, --help                             Prints the basic help menu of the script and exits.
--i,--input                             Defines the input link to the show. [REQUIRED]
+-u,--urls                              Defines the input links to the shows. [REQUIRED]
 -V,--version                           Prints the VERSION and exits.
--hd,--highdef                          Selects 720p version if available (Only 480 and 720 are offered on WCO Stream)
--v,--verbose                           Starts Verbose Logging for detailed information.
--o,--ouput                             Specifies download location
--se,--season                           Selects the season to download of a show (Default = All)
--epr,--episoderange                    Selects the range of episodes to download (Default = All) [ Ex : --range 1-10 (This will download first 10 episodes of ALL Seasons!)]
--x,--exclude                           Specifies what shows not to download [Ex: -x ova,special will make it so no ova or special episodes are downloaded]
--n,--newest                            Downloads the newest episode of the show given.
--sh, --show_downloaded_animes          Show all downloaded shows and episodes.
--us, --update_shows                    Update all shows in your database that have new episodes.
--b, --batch                            Batch download, download multiple anime [Ex : -b ./file_name (a text file with wcostream.com, to download from).
+-s,--season                            Selects the season to download of a show (Default = All)
+-r,--range                             Selects the range of episodes to download (Default = All) [ Ex : --range 1 or 1-10 or 1-]
 -t, --threads                          This will create multiple threads, in other words download multiple episodes at ones [Ex : -t 4 (Number of threads to create).
 ```
 
@@ -98,11 +90,11 @@ After you've saved this script in a directory/folder, you need to open `command 
 
 *If you're using the windows binary :*
 
-`wco-dl.exe -i "<URL TO THE SHOW>"`
+`wco-dl.exe -u "<URL TO THE SHOW>"`
 
 *If you're using the Python Script :*
 
-`__main__.py -i "<URL TO THE SHOW>"`
+`main.py -u "<URL TO THE SHOW>"`
 
 
 ### Linux/Debian
@@ -111,20 +103,16 @@ After you've saved this script in a directory/folder, you need to open `command 
 * Now, change the current working directory of the terminal to the one where you've downloaded this repository.
 * Now, in the Terminal, type this :
 
-`__main__.py -i "<URL TO THE SHOW>"`
+`main.py -u "<URL TO THE SHOW>" "<URL TO THE SHOW>"` - Supports multiple urls
 
 ### Example Commands
-`__main__.py -i "<Whole Show URL>" -x special,ova -se 2 -epr 1-10` - Download Episodes 1-10 in Season 2 minus specials and ovas
+`main.py -u "<Single Episode URL>"` - Download all every season!
 
-`__main__.py -i "<Single Episode URL>" -o "/home/username/shows/showname` - Download to a specific path!
+`main.py -u "<Whole Show URL>" -r 1-10` - Download Episodes 1-10
 
-`__main__.py -i "<Whole Show URL>" -epr 1-10` - Download Episodes 1-10 in ALL seasons
+`main.py -u "<Whole Show URL>" -s 2` - Download entire of Season 2
 
-`__main__.py -i "<Whole Show URL>" -se 2` - Download entire of Season 2
-
-`__main__.py -i "<Whole Show URL>" -se 2 -epr 5` - Download Episode 5 of Season 2
-
-`__main__.py -i "<Whole Show URL>" -epr L5` - Get the newest five episodes of the series
+`main.py -u "<Whole Show URL>" -s 2 -r 5` - Download Episode 5 of Season 2
 
 ### Example URLs
 * WCOStream :
