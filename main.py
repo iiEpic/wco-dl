@@ -3,7 +3,8 @@ import re
 import json
 import pathlib
 import argparse
-import concurrent
+import concurrent.futures
+import threading
 
 import pydantic
 import requests
@@ -29,6 +30,35 @@ class Config:
             self.config = Config_Model()
             config_file.write_text(self.config.json())
         self.config = pydantic.TypeAdapter(Config_Model).validate_json(config_file.read_text())
+
+class Database:
+    file_mutex = threading.Lock()
+    def add_anime_to_database(self, show_name: str, database_path: str):
+        with self.file_mutex:
+            file_handel = pathlib.Path(database_path)
+            if (file_handel.is_file()):
+                content = json.loads(file_handel.read_text())
+            else:
+                content = {}
+            if (show_name not in content):
+                content[show_name] = []
+            else:
+                return
+            file_handel.write_text(json.dumps(content))
+
+    def add_episode_to_database(self, show_name:str, url: str, database_path: str):
+        with self.file_mutex:
+            file_handel = pathlib.Path(database_path)
+            content = json.loads(file_handel.read_text())
+            if (url not in content[show_name]): 
+                content[show_name].append(url)
+                file_handel.write_text(json.dumps(content))
+
+    def get_all_downloads(self, database_path: str):
+        with self.file_mutex:
+            file_handel = pathlib.Path(database_path)
+            content = json.loads(file_handel.read_text())
+            return content
 
 class Network:
     session = requests.Session()
@@ -63,13 +93,14 @@ class Network:
                 headers.update({'Range': f'bytes={file_size}-'})
         if (file_size == int(info.headers['Content-Length'])):
             print(f'Skipping: {folder}/{filename}')
-            return 
+            return filename
         response: requests.model.Response = self.session.get(url, headers=headers, stream=True)
         with tqdm.tqdm(total=int(info.headers['Content-Length']), unit='B', unit_scale=True, unit_divisor=1024, desc=label, initial=file_size) as progress_bar:
             with open(file_handel, 'ab') as file_:
                 for chunk in response.iter_content(1024):
                     file_.write(chunk)
                     progress_bar.update(len(chunk))
+        return filename
 
 class Scraper:
     configuration: Config_Model = Config().config 
@@ -195,9 +226,9 @@ def download_episode(url: str, network_manager: Network, scraper_manager: Scrape
         #    season = 'Special'
         #    #episode = episode.replace('0', f"{str(next(os.walk(f'{scraper_manager.configuration.download_directory}/{show_name}/{season}'))[2] + 1)}")
         episode = f'{episode} {resolution}.mp4' if config.quality_in_filename else f'{episode}.mp4'
-        network_manager.download_file(f'Downloading: {show_name} {season} {episode}', media, header, f'{episode}', f'{scraper_manager.configuration.download_directory}/{show_name}/{season}', config.resume_download)
+        return network_manager.download_file(f'Downloading: {show_name} {season} {episode}', media, header, f'{episode}', f'{scraper_manager.configuration.download_directory}/{show_name}/{season}', config.resume_download)
     else:
-        network_manager.download_file(f'Downloading: {show_name} {season} {episode}', media, header, f'{url.split('/')[-1]}.mp4', f'{Scraper().configuration.download_directory}/{show_name}', config.resume_download)
+        return network_manager.download_file(f'Downloading: {show_name} {season} {episode}', media, header, f'{url.split('/')[-1]}.mp4', f'{Scraper().configuration.download_directory}/{show_name}', config.resume_download)
 
 def args_parser():
     parser = argparse.ArgumentParser(description='Download wcostream content')
@@ -207,6 +238,8 @@ def args_parser():
     parser.add_argument('-s','--season', help='Threads to use', type=int, default=0, required=False)
     parser.add_argument('-r','--range', help='Ranges to download ex: 1, 1-10, 1-', type=str, default='all', required=False)
     parser.add_argument('-v','--version', help='Show version', action='store_true', required=False)
+    parser.add_argument('-d','--database', help='Show all downloaded anime', action='store_true', required=False)
+    parser.add_argument('-ds','--database_show', help='Show all downloaded anime and episodes', action='store_true', required=False)
     args = parser.parse_args()
     return args
 
@@ -214,25 +247,40 @@ def main():
     args = args_parser()
     network_manager: Network = Network()
     scraper_manager: Scraper = Scraper() 
+    database_manager: Database = Database()
     config: Config_Model = scraper_manager.configuration
     if (args.version):
         print(f'Version: {config.version}')
+        return
+    if (args.database):
+        shows = database_manager.get_all_downloads(config.config_directory+'/db.json')
+        for show in shows.keys():
+            print(show)
+        return
+    if (args.database_show):
+        shows = database_manager.get_all_downloads(config.config_directory+'/db.json')
+        for show in shows.keys():
+            print(show)
+            for episode in shows[show]:
+                info = scraper_manager.info_extractor(episode)
+                print(f'    Downloaded: {info[1]} {info[2]}')
         return
     if (args.lookup):
         results = list(set(scraper_manager.search(args.lookup)))
         results.sort()
         title = 'Please choose (press SPACE to mark, ENTER to continue): '
         options = [result.replace('/anime/','').replace('-', ' ') for result in results]
-        selected = pick.pick(options, title, multiselect=True, min_selection_count=1)
+        selected = pick.pick(options, title, multiselect=True, min_selection_count=0)
         if (args.urls is None):
             args.urls = []
         for item in selected:
             args.urls.append(f"https://www.wcostream.net/anime/{item[0].replace(' ', '-')}")
     for url in args.urls:
         if ('/anime/' in url):
-            result =[]
+            results =[]
             episodes_urls = scraper_manager.get_episodes(url)
             episodes_urls.reverse()
+            database_manager.add_anime_to_database(scraper_manager.info_extractor(episodes_urls[0])[0], config.config_directory+'/db.json')
             if (args.season !=  0):
                 episodes_urls = [url for url in episodes_urls if scraper_manager.info_extractor(url)[1] == f'Season {args.season}']
             if (args.range != 'all'):
@@ -244,12 +292,18 @@ def main():
                     episodes_urls = [value for index, value in enumerate(episodes_urls) if index+1 >= start and index+1 <= end] 
             if (args.threads > 1):
                 with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as exe:
-                    result = exe.map(download_episode, episodes_urls, [network_manager]*len(episodes_urls),[scraper_manager]*len(episodes_urls),[config]*len(episodes_urls))
+                    results = exe.map(download_episode, episodes_urls, [network_manager]*len(episodes_urls),[scraper_manager]*len(episodes_urls),[config]*len(episodes_urls))
+                    for index,result in enumerate(results):
+                        if (result):
+                            database_manager.add_episode_to_database(scraper_manager.info_extractor(episodes_urls[index])[0], episodes_urls[index], config.config_directory+'/db.json')
             else:
                 for episode_url in episodes_urls:
-                    download_episode(episode_url, network_manager, scraper_manager, config)
+                    if (download_episode(episode_url, network_manager, scraper_manager, config)):
+                        database_manager.add_episode_to_database(scraper_manager.info_extractor(episode_url)[0], episode_url, config.config_directory+'/db.json')
         else:
-            download_episode(url, network_manager, scraper_manager, config)
+            database_manager.add_anime_to_database(scraper_manager.info_extractor(url)[0], config.config_directory+'/db.json')
+            if (download_episode(url, network_manager, scraper_manager, config)):
+                database_manager.add_episode_to_database(scraper_manager.info_extractor(url)[0], url, config.config_directory+'/db.json')
 
 if __name__ == '__main__':
     main()

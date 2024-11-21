@@ -9,3 +9,4 @@ settings.json
 /build
 /.idea
 /__pycache__
+/env
