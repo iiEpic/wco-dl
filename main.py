@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import pathlib
@@ -27,20 +26,16 @@ class Config:
         if (not config_file.is_file()):
             pathlib.Path(self.config.config_directory).mkdir(parents=True, exist_ok=True)
             self.config = Config_Model()
-            config_file.write_text(self.config.json())
+            config_file.write_text(self.config.model_dump_json())
         self.config = pydantic.TypeAdapter(Config_Model).validate_json(config_file.read_text())
 
 class Database:
     def add_anime_to_database(self, show_name: str, database_path: str):
         file_handel = pathlib.Path(database_path)
-        if (file_handel.is_file()):
-            content = json.loads(file_handel.read_text())
-        else:
-            content = {}
-        if (show_name not in content):
-            content[show_name] = []
-        else:
+        content = {} if not file_handel.is_file() else  json.loads(file_handel.read_text())
+        if (show_name in content):
             return
+        content[show_name] = []
         file_handel.write_text(json.dumps(content))
 
     def add_episode_to_database(self, show_name:str, url: str, database_path: str):
@@ -57,23 +52,23 @@ class Database:
 
 class Network:
     session = requests.Session()
-    def raw_get(self, url: str, headers: dict=None) -> requests.models.Response:
-        response: requests.model.Response = self.session.get(url, headers=headers) 
+    def raw_get(self, url: str, headers: dict={}) -> requests.models.Response:
+        response: requests.models.Response = self.session.get(url, headers=headers) 
         if (response.ok):
             return response
         raise requests.exceptions.HTTPError('Response was not ok')
 
-    def get(self, url: str, headers: dict=None) -> tuple:
+    def get(self, url: str, headers: dict={}) -> str:
         response: str = self.raw_get(url, headers).text
         return response
 
-    def raw_post(self, url: str, headers: dict=None, data: dict=None) -> requests.models.Response:
-        response: requests.model.Response = self.session.post(url, headers=headers, data=data) 
+    def raw_post(self, url: str, headers: dict={}, data: dict={}) -> requests.models.Response:
+        response: requests.models.Response = self.session.post(url, headers=headers, data=data) 
         if (response.ok):
             return response
         raise requests.exceptions.HTTPError('Response was not ok')
 
-    def post(self, url: str, headers: dict=None, data: dict=None) -> tuple:
+    def post(self, url: str, headers: dict={}, data: dict={}) -> str:
         response: str = self.raw_post(url, headers, data).text
         return response
 
@@ -81,7 +76,7 @@ class Network:
         file_size: int = 0 
         file_handel: pathlib.Path = pathlib.Path(f'{folder}/{filename}')
         pathlib.Path(folder).mkdir(parents=True, exist_ok=True)
-        info: requests.model.Response = self.session.get(url, headers=headers, stream=True)
+        info: requests.models.Response = self.session.get(url, headers=headers, stream=True)
         if (file_handel.is_file()):
             file_size = file_handel.stat().st_size
             if (resume_download):
@@ -89,7 +84,7 @@ class Network:
         if (file_size == int(info.headers['Content-Length'])):
             print(f'Skipping: {folder}/{filename}')
             return filename
-        response: requests.model.Response = self.session.get(url, headers=headers, stream=True)
+        response: requests.models.Response = self.session.get(url, headers=headers, stream=True)
         with tqdm.tqdm(total=int(info.headers['Content-Length']), unit='B', unit_scale=True, unit_divisor=1024, desc=label, initial=file_size) as progress_bar:
             with open(file_handel, 'ab') as file_:
                 for chunk in response.iter_content(1024):
@@ -100,7 +95,7 @@ class Network:
 class Scraper:
     configuration: Config_Model = Config().config 
     network_manager: Network = Network()
-    def request(self, url: str, extra_headers: dict=None):
+    def request(self, url: str, extra_headers: dict={}):
         headers: dict = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,image/webp,*""" /*;q=0.8',
@@ -114,7 +109,7 @@ class Scraper:
         response: str = self.network_manager.get(url, headers)
         return response
 
-    def select_resolution(self, sources: list[dict]) -> dict: 
+    def select_resolution(self, sources: list[dict[str, str]]) -> dict: 
         for source in sources:
             if (source['label'] == self.configuration.quality):
                 return source
@@ -129,7 +124,7 @@ class Scraper:
     def get_hidden_url(self, url: str) -> str:
         page_source: str = self.request(url)
         soup: bs4.BeautifulSoup = bs4.BeautifulSoup(page_source, 'html.parser')
-        iframe: bs4.element.Tag = soup.find('iframe', {'id', 'frameNewcizgifilmuploads0'})
+        iframe = soup.find('iframe', {'id', 'frameNewcizgifilmuploads0'})
         if (iframe is None):
             iframe = soup.find('iframe')
         if (iframe is None):
@@ -162,10 +157,10 @@ class Scraper:
                 source_urls.append({'label': '1080p', 'url': source_base_url + fhd_token})  # Order the items as (LABEL, URL).
             backup_url = json_data.get('cdn', '') + '/getvid?evid=' + (sd_token or hd_token)
         else:
-            sources_block = re.search(r'sources:\s*?\[(.*?)\]', html, re.DOTALL).group(1)
+            sources_block = re.search(r'sources:\s*?\[(.*?)\]', page_source, re.DOTALL).group(1)
             stream_pattern = re.compile(r'\{\s*?file:\s*?"(.*?)"(?:,\s*?label:\s*?"(.*?)")?')
             source_urls = [{'label': sourceMatch.group(2), 'url': sourceMatch.group(1)} for sourceMatch in stream_pattern.finditer(sources_block)]
-            backup_match = stream_pattern.search(html[html.find(b'jw.onError'):])
+            backup_match = stream_pattern.search(page_source[page_source.find(b'jw.onError'):])
             backup_url = backup_match.group(1) if backup_match else ''
         return source_urls, backup_url
 
@@ -204,7 +199,7 @@ class Scraper:
         selected_source = self.select_resolution(sources)
         return selected_source['label'], selected_source['url'], backup, embed_url
 
-def download_episode(url: str, network_manager: Network, scraper_manager: Scraper, config: Config):
+def download_episode(url: str, network_manager: Network, scraper_manager: Scraper, config: Config_Model):
     resolution, media, backup, hidden_url = scraper_manager.get_media_urls(url)
     show_name, season, episode, desc, url = scraper_manager.info_extractor(url)
     header = {
