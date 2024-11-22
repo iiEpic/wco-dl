@@ -69,12 +69,15 @@ Currently, the script supports these arguments :
 ```
 -h, --help                             Prints the basic help menu of the script and exits.
 -u,--urls                              Defines the input links to the shows.
+-x,--exclude                           Exclude any keyword from downloads
 -l,--lookup                            Search for any show by nameDefines the input links to the shows.
--V,--version                           Prints the VERSION and exits.
 -s,--season                            Selects the season to download of a show (Default = All)
 -r,--range                             Selects the range of episodes to download (Default = All) [ Ex : --range 1 or 1-10 or 1-]
 -t, --threads                          This will create multiple threads, in other words download multiple episodes at ones [Ex : -t 4 (Number of threads to create).
--v, --version                          Show app version
+-n, --dry-run                          Does everything except download anything
+-d, --database                         Show all shows downloaded
+-ds, --database-show                   Show all shows downloaded and episodes
+-V,--version                           Prints the VERSION and exits.
 ```
 
 ## Usage

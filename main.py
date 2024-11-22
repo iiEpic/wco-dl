@@ -4,7 +4,6 @@ import json
 import pathlib
 import argparse
 import concurrent.futures
-import threading
 
 import pydantic
 import requests
@@ -32,33 +31,29 @@ class Config:
         self.config = pydantic.TypeAdapter(Config_Model).validate_json(config_file.read_text())
 
 class Database:
-    file_mutex = threading.Lock()
     def add_anime_to_database(self, show_name: str, database_path: str):
-        with self.file_mutex:
-            file_handel = pathlib.Path(database_path)
-            if (file_handel.is_file()):
-                content = json.loads(file_handel.read_text())
-            else:
-                content = {}
-            if (show_name not in content):
-                content[show_name] = []
-            else:
-                return
-            file_handel.write_text(json.dumps(content))
+        file_handel = pathlib.Path(database_path)
+        if (file_handel.is_file()):
+            content = json.loads(file_handel.read_text())
+        else:
+            content = {}
+        if (show_name not in content):
+            content[show_name] = []
+        else:
+            return
+        file_handel.write_text(json.dumps(content))
 
     def add_episode_to_database(self, show_name:str, url: str, database_path: str):
-        with self.file_mutex:
-            file_handel = pathlib.Path(database_path)
-            content = json.loads(file_handel.read_text())
-            if (url not in content[show_name]): 
-                content[show_name].append(url)
-                file_handel.write_text(json.dumps(content))
+        file_handel = pathlib.Path(database_path)
+        content = json.loads(file_handel.read_text())
+        if (url not in content[show_name]): 
+            content[show_name].append(url)
+            file_handel.write_text(json.dumps(content))
 
     def get_all_downloads(self, database_path: str):
-        with self.file_mutex:
-            file_handel = pathlib.Path(database_path)
-            content = json.loads(file_handel.read_text())
-            return content
+        file_handel = pathlib.Path(database_path)
+        content = json.loads(file_handel.read_text())
+        return content
 
 class Network:
     session = requests.Session()
@@ -233,13 +228,15 @@ def download_episode(url: str, network_manager: Network, scraper_manager: Scrape
 def args_parser():
     parser = argparse.ArgumentParser(description='Download wcostream content')
     parser.add_argument('-u','--urls', help='Urls to download', nargs='+', required=False)
+    parser.add_argument('-x','--exclude', help='Specifies what shows not to download [Ex: -x ova,special will make it so no ova or special episodes are downloaded]', nargs='+', required=False)
     parser.add_argument('-l','--lookup', help='Search', type=str, required=False)
     parser.add_argument('-t','--threads', help='Threads to use', type=int, default=1, required=False)
-    parser.add_argument('-s','--season', help='Threads to use', type=int, default=0, required=False)
+    parser.add_argument('-s','--season', help='Download a specific season', type=int, default=0, required=False)
     parser.add_argument('-r','--range', help='Ranges to download ex: 1, 1-10, 1-', type=str, default='all', required=False)
-    parser.add_argument('-v','--version', help='Show version', action='store_true', required=False)
-    parser.add_argument('-d','--database', help='Show all downloaded anime', action='store_true', required=False)
-    parser.add_argument('-ds','--database_show', help='Show all downloaded anime and episodes', action='store_true', required=False)
+    parser.add_argument('-n','--dry-run', help='Dry run does everything except download', action='store_true', required=False)
+    parser.add_argument('-d','--database', help='Show all downloaded shows', action='store_true', required=False)
+    parser.add_argument('-ds','--database-show', help='Show all downloaded shows and episodes', action='store_true', required=False)
+    parser.add_argument('-V','--version', help='Show version', action='store_true', required=False)
     args = parser.parse_args()
     return args
 
@@ -253,12 +250,12 @@ def main():
         print(f'Version: {config.version}')
         return
     if (args.database):
-        shows = database_manager.get_all_downloads(config.config_directory+'/db.json')
+        shows = database_manager.get_all_downloads(f'{config.config_directory}/db.json')
         for show in shows.keys():
             print(show)
         return
     if (args.database_show):
-        shows = database_manager.get_all_downloads(config.config_directory+'/db.json')
+        shows = database_manager.get_all_downloads(f'{config.config_directory}/db.json')
         for show in shows.keys():
             print(show)
             for episode in shows[show]:
@@ -267,6 +264,9 @@ def main():
         return
     if (args.lookup):
         results = list(set(scraper_manager.search(args.lookup)))
+        if (not results):
+            print('Nothing found')
+            return
         results.sort()
         title = 'Please choose (press SPACE to mark, ENTER to continue): '
         options = [result.replace('/anime/','').replace('-', ' ') for result in results]
@@ -280,7 +280,7 @@ def main():
             results =[]
             episodes_urls = scraper_manager.get_episodes(url)
             episodes_urls.reverse()
-            database_manager.add_anime_to_database(scraper_manager.info_extractor(episodes_urls[0])[0], config.config_directory+'/db.json')
+            database_manager.add_anime_to_database(scraper_manager.info_extractor(episodes_urls[0])[0], f'{config.config_directory}/db.json')
             if (args.season !=  0):
                 episodes_urls = [url for url in episodes_urls if scraper_manager.info_extractor(url)[1] == f'Season {args.season}']
             if (args.range != 'all'):
@@ -290,20 +290,28 @@ def main():
                 else:
                     start, end = int(args.range), int(args.range)
                     episodes_urls = [value for index, value in enumerate(episodes_urls) if index+1 >= start and index+1 <= end] 
+            if (args.exclude):
+                episodes_urls = [episode_url for episode_url in episodes_urls if not [exclude for exclude in args.exclude if exclude in episode_url]]
             if (args.threads > 1):
-                with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as exe:
-                    results = exe.map(download_episode, episodes_urls, [network_manager]*len(episodes_urls),[scraper_manager]*len(episodes_urls),[config]*len(episodes_urls))
-                    for index,result in enumerate(results):
-                        if (result):
-                            database_manager.add_episode_to_database(scraper_manager.info_extractor(episodes_urls[index])[0], episodes_urls[index], config.config_directory+'/db.json')
+                if (not args.dry_run): 
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as exe:
+                        results = exe.map(download_episode, episodes_urls, [network_manager]*len(episodes_urls),[scraper_manager]*len(episodes_urls),[config]*len(episodes_urls))
+                        for index,result in enumerate(results):
+                            if (result):
+                                database_manager.add_episode_to_database(scraper_manager.info_extractor(episodes_urls[index])[0], episodes_urls[index], f'{config.config_directory}/db.json')
             else:
-                for episode_url in episodes_urls:
-                    if (download_episode(episode_url, network_manager, scraper_manager, config)):
-                        database_manager.add_episode_to_database(scraper_manager.info_extractor(episode_url)[0], episode_url, config.config_directory+'/db.json')
+                if (not args.dry_run): 
+                    for episode_url in episodes_urls:
+                        if (download_episode(episode_url, network_manager, scraper_manager, config)):
+                            database_manager.add_episode_to_database(scraper_manager.info_extractor(episode_url)[0], episode_url, f'{config.config_directory}/db.json')
         else:
-            database_manager.add_anime_to_database(scraper_manager.info_extractor(url)[0], config.config_directory+'/db.json')
-            if (download_episode(url, network_manager, scraper_manager, config)):
-                database_manager.add_episode_to_database(scraper_manager.info_extractor(url)[0], url, config.config_directory+'/db.json')
+            database_manager.add_anime_to_database(scraper_manager.info_extractor(url)[0], f'{config.config_directory}/db.json')
+            if (args.exclude and [exclude for exclude in args.exclude if exclude in url]):
+                print(f'Excluded: {url}')
+                return
+            if (not args.dry_run): 
+                if (download_episode(url, network_manager, scraper_manager, config)):
+                    database_manager.add_episode_to_database(scraper_manager.info_extractor(url)[0], url, f'{config.config_directory}/db.json')
 
 if __name__ == '__main__':
     main()
