@@ -8,7 +8,7 @@ import argparse
 
 def setup_logging():
     logging.basicConfig(level=logging.DEBUG, filename='wco_dl_wrapper.log', filemode='a',
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info("Logging initialized.")
     print("[INFO] Logging initialized.")
 
@@ -28,16 +28,24 @@ def extract_episode_links(series_url):
     print(f"[DEBUG] Page HTML snippet: {soup.prettify()[:500]}")
     
     episode_links = set()  # Using a set to ensure unique links
-
-    # Find all <a> tags and print them for debugging
-    all_links = soup.find_all('a', href=True)
-    print(f"[DEBUG] Total <a> tags found: {len(all_links)}")
-    logging.debug(f"Total <a> tags found: {len(all_links)}")
+    series_name = series_url.split('/')[-1].replace('-', ' ')  # Extract series name for filtering
+    
+    # Locate the specific div containing the episode list
+    list_container = soup.find("div", id="catlist-listview")
+    if not list_container:
+        logging.error("[ERROR] Could not find episode list container.")
+        print("[ERROR] Could not find episode list container.")
+        return []
+    
+    # Find all <a> tags within the unordered list
+    all_links = list_container.find_all('a', href=True)
+    print(f"[DEBUG] Total episode links found in list: {len(all_links)}")
+    logging.debug(f"Total episode links found in list: {len(all_links)}")
 
     for a_tag in all_links:
         href = a_tag['href']
         print(f"[DEBUG] Checking link: {href}")
-        if re.search(r'/.*-episode-\d+', href) or re.search(r'/.*-season-\d+-episode-\d+', href):
+        if series_name.replace(' ', '-').lower() in href:
             full_url = f"https://www.wcostream.tv{href}" if href.startswith('/') else href
             episode_links.add(full_url)  # Add to set to ensure uniqueness
             logging.debug(f"Found episode link: {full_url}")
