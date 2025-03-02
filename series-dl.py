@@ -27,7 +27,7 @@ def extract_episode_links(series_url):
     logging.debug(f"Page HTML snippet: {soup.prettify()[:1000]}")
     print(f"[DEBUG] Page HTML snippet: {soup.prettify()[:500]}")
     
-    episode_links = []
+    episode_links = set()  # Using a set to ensure unique links
 
     # Find all <a> tags and print them for debugging
     all_links = soup.find_all('a', href=True)
@@ -39,13 +39,13 @@ def extract_episode_links(series_url):
         print(f"[DEBUG] Checking link: {href}")
         if re.search(r'/.*-episode-\d+', href) or re.search(r'/.*-season-\d+-episode-\d+', href):
             full_url = f"https://www.wcostream.tv{href}" if href.startswith('/') else href
-            episode_links.append(full_url)
+            episode_links.add(full_url)  # Add to set to ensure uniqueness
             logging.debug(f"Found episode link: {full_url}")
             print(f"[INFO] Found episode: {full_url}")
     
-    logging.info(f"Total episodes found: {len(episode_links)}")
-    print(f"[INFO] Total episodes found: {len(episode_links)}")
-    return episode_links
+    logging.info(f"Total unique episodes found: {len(episode_links)}")
+    print(f"[INFO] Total unique episodes found: {len(episode_links)}")
+    return list(episode_links)  # Convert set back to list for iteration
 
 def download_episode(episode_url, output_dir):
     print(f"[INFO] Attempting to download episode: {episode_url}")
